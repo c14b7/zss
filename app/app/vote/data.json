@@ -1,0 +1,32 @@
+{
+  "title": "Głosowanie nad budżetem na 2025 rok",
+  "description": "Decyzja o przeznaczeniu dodatkowych środków finansowych na modernizację infrastruktury IT w firmie. Proponowana kwota to 500,000 PLN.",
+  "category": "Budżet i Finanse",
+  "options": [
+    {
+      "value": -1,
+      "label": "Przeciw",
+      "description": "Jestem przeciwny tej propozycji", 
+      "variant": "destructive"
+    },
+    {
+      "value": 1,
+      "label": "Za",
+      "description": "Popieram tę propozycję",
+      "variant": "default"
+    },
+    {
+      "value": 0,
+      "label": "Wstrzymuję się",
+      "description": "Nie mam zdania w tej sprawie",
+      "variant": "outline"
+    }
+  ],
+  "deadline": "2025-08-15",
+  "totalVotes": 0,
+  "results": {
+    "-1": 0,
+    "0": 0,
+    "1": 0
+  }
+}
