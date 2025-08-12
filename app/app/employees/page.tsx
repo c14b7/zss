@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { EmployeesTable } from "@/components/tables/employees-table"
+import { listEmployees } from "@/app/lib/store"
 
 export const dynamic = "force-dynamic"
 
 export default async function EmployeesPage() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/employees`, { cache: "no-store" })
-  const employees = await res.json()
+  const employees = await listEmployees()
 
   return (
     <div className="space-y-6">

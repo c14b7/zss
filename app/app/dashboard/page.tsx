@@ -14,13 +14,14 @@ import { EmployeesTable } from "@/components/tables/employees-table"
 import { VoteTrendsChart } from "@/components/charts/vote-trends-chart"
 
 import data from "./data.json"
+import { listEmployees, listVotes } from "@/app/lib/store"
 
 async function getData() {
-  const [empRes, voteRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/employees`, { cache: "no-store" }),
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/votes`, { cache: "no-store" }),
+  // Use direct function calls instead of fetch to avoid URL parsing issues
+  const [employees, votes] = await Promise.all([
+    listEmployees(),
+    listVotes(),
   ])
-  const [employees, votes] = await Promise.all([empRes.json(), voteRes.json()])
   const totalBallots = votes.reduce((acc: number, v: any) => acc + (v.ballots?.length ?? 0), 0)
   // proste trendy: sumy per dzień
   const byDay = new Map<string, number>()
