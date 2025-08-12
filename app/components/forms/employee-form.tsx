@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { Employee } from "@/app/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,12 +27,12 @@ export function EmployeeForm({ initial }: { initial?: Partial<Employee> }) {
       router.push(`/employees/${emp.id}`)
       router.refresh()
     } else {
-      alert("Błąd zapisu")
+      toast.error("Błąd zapisu")
     }
   }
 
   return (
-    <Card asChild>
+    <Card>
       <form onSubmit={onSubmit}>
         <CardHeader>
           <CardTitle>{initial?.id ? "Edytuj pracownika" : "Nowy pracownik"}</CardTitle>
