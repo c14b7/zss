@@ -1,0 +1,16 @@
+[
+  {
+    "id": "2025-q3-awards",
+    "title": "Nagrody Q3 2025",
+    "createdAt": "2025-08-01T00:00:00.000Z",
+    "candidates": [
+      { "id": "e1", "name": "Jan Kowalski", "department": "Marketing" },
+      { "id": "e2", "name": "Anna Nowak", "department": "IT" }
+    ],
+    "ballots": [
+      { "employeeId": "e1", "choice": "e2", "createdAt": "2025-08-10T09:10:00.000Z" },
+      { "employeeId": "e2", "choice": "e2", "createdAt": "2025-08-10T09:12:00.000Z" },
+      { "employeeId": "e3", "choice": "e1", "createdAt": "2025-08-10T09:14:00.000Z" }
+    ]
+  }
+]

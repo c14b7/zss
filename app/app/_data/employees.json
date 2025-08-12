@@ -1,0 +1,18 @@
+[
+  {
+    "id": "e1",
+    "name": "Jan Kowalski",
+    "department": "Marketing",
+    "role": "Specjalista",
+    "hiredAt": "2022-05-12T00:00:00.000Z",
+    "score": 87
+  },
+  {
+    "id": "e2",
+    "name": "Anna Nowak",
+    "department": "IT",
+    "role": "Inżynier oprogramowania",
+    "hiredAt": "2021-09-01T00:00:00.000Z",
+    "score": 92
+  }
+]
