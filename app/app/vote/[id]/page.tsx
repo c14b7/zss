@@ -32,15 +32,26 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Client, Databases } from "appwrite"
+import { Client, Databases, ID } from "appwrite"
 import { useParams } from "next/navigation"
-import { Loader2, EyeOff, Users, ShieldCheck } from "lucide-react"
+import { Loader2, EyeOff, Users, ShieldCheck, LogOut, UserPlus } from "lucide-react"
+import { useAuth } from "@/components/auth/AuthProvider"
+import { LoginDialog } from "@/components/auth/LoginDialog"
+import { toast } from "sonner"
+import Link from "next/link"
 
 interface VoteOption {
   value: number
   label: string
   description: string
   variant: "default" | "destructive" | "outline"
+}
+
+interface VoteRecord {
+  userId: string
+  userName: string
+  vote: number
+  timestamp: string
 }
 
 interface VoteData {
@@ -53,6 +64,7 @@ interface VoteData {
   results: Record<string, number>
   isAnonymous: boolean
   voters: string[]
+  voteRecords: VoteRecord[]
 }
 
 // Konfiguracja Appwrite
@@ -65,6 +77,7 @@ const databases = new Databases(client)
 export default function VotePage() {
   const params = useParams()
   const voteId = params.id as string
+  const { user, logout } = useAuth()
   
   const [voteData, setVoteData] = useState<VoteData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,20 +86,8 @@ export default function VotePage() {
   const [hasVoted, setHasVoted] = useState(false)
   const [userIdentifier, setUserIdentifier] = useState("")
   const [showIdentifierDialog, setShowIdentifierDialog] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [pendingVote, setPendingVote] = useState<number | null>(null)
-
-  // Symulacja sprawdzenia czy użytkownik jest zalogowany
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentUser, setCurrentUser] = useState<string>("")
-
-  useEffect(() => {
-    // Sprawdź czy użytkownik jest zalogowany (symulacja)
-    const storedUser = localStorage.getItem('currentUser')
-    if (storedUser) {
-      setIsLoggedIn(true)
-      setCurrentUser(storedUser)
-    }
-  }, [])
 
   // Ładowanie danych ankiety
   useEffect(() => {
@@ -109,15 +110,20 @@ export default function VotePage() {
           totalVotes: response.totalVotes || 0,
           results: JSON.parse(response.results),
           isAnonymous: response.isAnonymous || false,
-          voters: JSON.parse(response.voters || '[]')
+          voters: JSON.parse(response.voters || '[]'),
+          voteRecords: JSON.parse(response.voteRecords || '[]')
         }
 
         setVoteData(data)
         
         // Sprawdź czy użytkownik już głosował
-        const identifier = isLoggedIn ? currentUser : localStorage.getItem(`vote_${voteId}_identifier`)
-        if (identifier && data.voters.includes(identifier)) {
+        if (user && data.voters.includes(user.$id)) {
           setHasVoted(true)
+        } else if (!user) {
+          const identifier = localStorage.getItem(`vote_${voteId}_identifier`)
+          if (identifier && data.voters.includes(identifier)) {
+            setHasVoted(true)
+          }
         }
         
       } catch (error) {
@@ -131,23 +137,34 @@ export default function VotePage() {
     if (voteId) {
       fetchVoteData()
     }
-  }, [voteId, isLoggedIn, currentUser])
+  }, [voteId, user])
 
   // Funkcja głosowania
   const handleVote = async (optionValue: number) => {
     if (!voteData || hasVoted) return
 
-    // Jeśli nie zalogowany, wymagaj identyfikatora
-    if (!isLoggedIn) {
+    // Jeśli nie zalogowany, pokaż opcje
+    if (!user) {
       const storedIdentifier = localStorage.getItem(`vote_${voteId}_identifier`)
       if (!storedIdentifier) {
         setPendingVote(optionValue)
-        setShowIdentifierDialog(true)
+        setShowLoginDialog(true)
         return
       }
     }
 
     await submitVote(optionValue)
+  }
+
+  const handleLoginChoice = (choice: 'login' | 'anonymous') => {
+    setShowLoginDialog(false)
+    
+    if (choice === 'login') {
+      setShowLoginDialog(false)
+      // LoginDialog się otworzy automatycznie przez stan
+    } else {
+      setShowIdentifierDialog(true)
+    }
   }
 
   const submitVote = async (optionValue: number) => {
@@ -156,10 +173,18 @@ export default function VotePage() {
     setIsVoting(true)
     
     try {
-      const identifier = isLoggedIn ? currentUser : userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`)
+      const identifier = user ? user.$id : userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`)
+      const userName = user ? user.name : userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`) || 'Anonim'
       
       if (!identifier) {
-        alert("Błąd: Brak identyfikatora użytkownika")
+        toast.error("Błąd: Brak identyfikatora użytkownika")
+        return
+      }
+
+      // Sprawdź czy już głosował
+      if (voteData.voters.includes(identifier)) {
+        toast.error("Już zagłosowałeś w tej ankiecie!")
+        setHasVoted(true)
         return
       }
 
@@ -170,6 +195,17 @@ export default function VotePage() {
       const updatedTotalVotes = voteData.totalVotes + 1
       const updatedVoters = [...voteData.voters, identifier]
 
+      // Dodaj rekord głosu (tylko jeśli nie jest anonimowe)
+      const updatedVoteRecords = [...voteData.voteRecords]
+      if (!voteData.isAnonymous) {
+        updatedVoteRecords.push({
+          userId: identifier,
+          userName: userName,
+          vote: optionValue,
+          timestamp: new Date().toISOString()
+        })
+      }
+
       // Zapisanie w bazie danych
       await databases.updateDocument(
         'votes',
@@ -178,7 +214,8 @@ export default function VotePage() {
         {
           results: JSON.stringify(updatedResults),
           totalVotes: updatedTotalVotes,
-          voters: JSON.stringify(updatedVoters)
+          voters: JSON.stringify(updatedVoters),
+          voteRecords: JSON.stringify(updatedVoteRecords)
         }
       )
 
@@ -187,21 +224,22 @@ export default function VotePage() {
         ...voteData,
         results: updatedResults,
         totalVotes: updatedTotalVotes,
-        voters: updatedVoters
+        voters: updatedVoters,
+        voteRecords: updatedVoteRecords
       })
 
       setHasVoted(true)
       
       // Zapisz identyfikator lokalnie jeśli nie zalogowany
-      if (!isLoggedIn && userIdentifier) {
+      if (!user && userIdentifier) {
         localStorage.setItem(`vote_${voteId}_identifier`, userIdentifier)
       }
       
-      alert("Dziękujemy za oddanie głosu!")
+      toast.success("Dziękujemy za oddanie głosu!")
       
     } catch (error) {
       console.error("Błąd podczas głosowania:", error)
-      alert("Wystąpił błąd podczas głosowania. Spróbuj ponownie.")
+      toast.error("Wystąpił błąd podczas głosowania. Spróbuj ponownie.")
     } finally {
       setIsVoting(false)
       setShowIdentifierDialog(false)
@@ -211,7 +249,7 @@ export default function VotePage() {
 
   const confirmIdentifierAndVote = async () => {
     if (!userIdentifier.trim()) {
-      alert("Proszę wprowadzić identyfikator")
+      toast.error("Proszę wprowadzić identyfikator")
       return
     }
 
@@ -220,20 +258,13 @@ export default function VotePage() {
     }
   }
 
-  // Login/logout dla demonstracji
-  const handleLogin = () => {
-    const username = prompt("Wprowadź nazwę użytkownika:")
-    if (username) {
-      localStorage.setItem('currentUser', username)
-      setCurrentUser(username)
-      setIsLoggedIn(true)
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success("Wylogowano pomyślnie")
+    } catch (error) {
+      toast.error("Błąd podczas wylogowywania")
     }
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser')
-    setCurrentUser("")
-    setIsLoggedIn(false)
   }
 
   if (isLoading) {
@@ -262,6 +293,11 @@ export default function VotePage() {
               ID ankiety: {voteId}
             </p>
           </CardContent>
+          <CardFooter>
+            <Link href="/vote/new">
+              <Button variant="outline">Utwórz nową ankietę</Button>
+            </Link>
+          </CardFooter>
         </Card>
       </div>
     )
@@ -271,11 +307,9 @@ export default function VotePage() {
 
   // Styling dla głosowania niejawnego
   const anonymousStyles = voteData.isAnonymous ? {
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
     containerClass: "bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen",
     cardClass: "bg-white/90 backdrop-blur-sm border-purple-200/50 shadow-xl"
   } : {
-    background: "",
     containerClass: "min-h-screen",
     cardClass: ""
   }
@@ -291,20 +325,21 @@ export default function VotePage() {
         </div>
       )}
       
-      {/* Panel logowania (demonstracja) */}
+      {/* Panel logowania */}
       <div className="absolute top-4 right-4">
-        {isLoggedIn ? (
+        {user ? (
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               <ShieldCheck className="w-4 h-4 mr-1" />
-              {currentUser}
+              {user.name}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
-              Wyloguj
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         ) : (
-          <Button variant="ghost" size="sm" onClick={handleLogin}>
+          <Button variant="ghost" size="sm" onClick={() => setShowLoginDialog(true)}>
+            <UserPlus className="w-4 h-4 mr-2" />
             Zaloguj się
           </Button>
         )}
@@ -409,9 +444,39 @@ export default function VotePage() {
                 Zagłosowało: {voteData.voters.length} osób
               </p>
             )}
+            <div className="mt-2">
+              <Link href={`/vote/results/${voteId}`}>
+                <Button variant="outline" size="sm" className="w-full">
+                  Zobacz szczegółowe wyniki
+                </Button>
+              </Link>
+            </div>
           </div>
         </CardFooter>
       </Card>
+
+      {/* Dialog wyboru logowania vs identyfikator */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Jak chcesz zagłosować?</DialogTitle>
+            <DialogDescription>
+              Możesz zalogować się na swoje konto lub podać identyfikator jako gość.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => handleLoginChoice('login')} className="w-full">
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Zaloguj się na konto
+            </Button>
+            <Button onClick={() => handleLoginChoice('anonymous')} variant="outline" className="w-full">
+              <Users className="w-4 h-4 mr-2" />
+              Głosuj jako gość (podaj identyfikator)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog identyfikatora */}
       <Dialog open={showIdentifierDialog} onOpenChange={setShowIdentifierDialog}>
@@ -452,6 +517,9 @@ export default function VotePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Login Dialog */}
+      <LoginDialog open={!showLoginDialog && !user && pendingVote !== null} onOpenChange={() => setPendingVote(null)} />
     </div>
   )
 }

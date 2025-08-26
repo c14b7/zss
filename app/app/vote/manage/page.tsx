@@ -270,7 +270,7 @@ export default function ManageVotesPage() {
   }
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50/50">
+    <div className="min-h-screen p-6 ">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Nagłówek */}
@@ -286,7 +286,7 @@ export default function ManageVotesPage() {
               <Link href="/vote/new">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  Nowa ankieta
+                  Nowe głosowanie
                 </Button>
               </Link>
             </div>
