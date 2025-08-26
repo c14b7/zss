@@ -1,23 +1,22 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react"
+  BarChart3,
+  Vote,
+  Plus,
+  Settings,
+  HelpCircle,
+  Search,
+  Database,
+  FileText,
+  Users,
+  Home,
+  Eye,
+  Folder,
+} from "lucide-react"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
@@ -32,138 +31,90 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
+import { useAuth } from "@/components/auth/AuthProvider"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth()
+  const pathname = usePathname()
+
+  const data = {
+    user: user ? {
+      name: user.name,
+      email: user.email,
+      avatar: "/avatars/user.jpg",
+    } : {
+      name: "Gość",
+      email: "Niezalogowany",
+      avatar: "/avatars/guest.jpg",
+    },
+    navMain: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: Home,
+      },
+      {
+        title: "Głosowania",
+        url: "/vote/manage",
+        icon: Vote,
+      },
+      {
+        title: "Uchwały",
+        url: "/resolution",
+        icon: FileText,
+      },
+      {
+        title: "Budżet",
+        url: "/budget",
+        icon: BarChart3,
+      },
+    ],
+    navSecondary: [
+      {
+        title: "Ustawienia",
+        url: "/settings",
+        icon: Settings,
+      },
+      {
+        title: "Pomoc",
+        url: "/help",
+        icon: HelpCircle,
+      },
+      {
+        title: "Wyszukaj",
+        url: "/search",
+        icon: Search,
+      },
+    ],
+    documents: [
+      {
+        name: "Dokumenty",
+        url: "/docs",
+        icon: Folder,
+      },
+      {
+        name: "Raporty",
+        url: "/docs/raport",
+        icon: FileText,
+      },
+      {
+        name: "Użytkownicy",
+        url: "/users",
+        icon: Users,
+      },
+    ],
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="##">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Zseil</span>
-              </a>
+            <SidebarMenuButton asChild>
+              <Link href="/" className="flex items-center gap-2">
+                <Vote className="!size-5" />
+                <span className="text-base font-semibold">ZSS</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -123,3 +123,65 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Styles for readonly editor */
+.editor-content-readonly .ContentEditable__root {
+  cursor: default !important;
+  user-select: text !important;
+  outline: none !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.editor-content-readonly .ContentEditable__root:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.editor-content-readonly * {
+  user-select: text !important;
+  pointer-events: none !important;
+}
+
+.editor-content-readonly a {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.editor-content-readonly img {
+  pointer-events: none !important;
+}
+
+/* Dark mode styles for editor */
+.dark .ContentEditable__root {
+  color: #e2e8f0 !important;
+  background-color: transparent !important;
+}
+
+.dark .editor-content-readonly h1,
+.dark .editor-content-readonly h2,
+.dark .editor-content-readonly h3,
+.dark .editor-content-readonly h4,
+.dark .editor-content-readonly h5,
+.dark .editor-content-readonly h6 {
+  color: #f1f5f9 !important;
+}
+
+.dark .editor-content-readonly p {
+  color: #e2e8f0 !important;
+}
+
+.dark .editor-content-readonly a {
+  color: #60a5fa !important;
+}
+
+.dark .editor-content-readonly blockquote {
+  border-left-color: #475569 !important;
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .editor-content-readonly code {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}

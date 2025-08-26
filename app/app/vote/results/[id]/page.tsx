@@ -210,7 +210,7 @@ export default function VoteResultsPage() {
     containerClass: "bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen",
     cardClass: "bg-white/90 backdrop-blur-sm border-purple-200/50 shadow-xl"
   } : {
-    containerClass: "min-h-screen bg-gray-50/50",
+    containerClass: "min-h-screen ",
     cardClass: ""
   }
 
@@ -259,9 +259,7 @@ export default function VoteResultsPage() {
                   </div>
                 </div>
               </div>
-              <Link href={`/vote/${voteId}`}>
-                <Button variant="outline">Powrót do ankiety</Button>
-              </Link>
+
             </div>
           </CardHeader>
         </Card>

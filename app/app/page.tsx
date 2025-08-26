@@ -7,7 +7,6 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { CardDemo } from "./2"
 
 import data from "./dashboard/data.json"
 
