@@ -30,18 +30,20 @@ export default function RootLayout({
         >
           <AuthProvider>
             <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  <div className="ml-auto">
-                    <span className="text-sm text-muted-foreground">Zintegrowany system samorządowy</span>
-                  </div>
-                </header>
-                <main className="flex-1">
-                  {children}
-                </main>
-              </SidebarInset>
+              <div className="flex h-screen overflow-hidden">
+                <AppSidebar />
+                <SidebarInset className="flex-1">
+                  <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                    <SidebarTrigger className="-ml-1" />
+                    <div className="ml-auto">
+                      <span className="text-sm text-muted-foreground">Zintegrowany system samorządowy</span>
+                    </div>
+                  </header>
+                  <main className="flex-1 overflow-auto">
+                    {children}
+                  </main>
+                </SidebarInset>
+              </div>
             </SidebarProvider>
           </AuthProvider>
           <Toaster />

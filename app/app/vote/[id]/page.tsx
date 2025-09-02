@@ -123,6 +123,7 @@ export default function VotePage() {
           const identifier = localStorage.getItem(`vote_${voteId}_identifier`)
           if (identifier && data.voters.includes(identifier)) {
             setHasVoted(true)
+            setUserIdentifier(identifier)
           }
         }
         
@@ -143,28 +144,17 @@ export default function VotePage() {
   const handleVote = async (optionValue: number) => {
     if (!voteData || hasVoted) return
 
-    // Jeśli nie zalogowany, pokaż opcje
+    // Jeśli nie zalogowany i nie ma identyfikatora, poproś o identyfikator
     if (!user) {
       const storedIdentifier = localStorage.getItem(`vote_${voteId}_identifier`)
       if (!storedIdentifier) {
         setPendingVote(optionValue)
-        setShowLoginDialog(true)
+        setShowIdentifierDialog(true)
         return
       }
     }
 
     await submitVote(optionValue)
-  }
-
-  const handleLoginChoice = (choice: 'login' | 'anonymous') => {
-    setShowLoginDialog(false)
-    
-    if (choice === 'login') {
-      setShowLoginDialog(false)
-      // LoginDialog się otworzy automatycznie przez stan
-    } else {
-      setShowIdentifierDialog(true)
-    }
   }
 
   const submitVote = async (optionValue: number) => {
@@ -178,6 +168,7 @@ export default function VotePage() {
       
       if (!identifier) {
         toast.error("Błąd: Brak identyfikatora użytkownika")
+        setIsVoting(false)
         return
       }
 
@@ -185,6 +176,7 @@ export default function VotePage() {
       if (voteData.voters.includes(identifier)) {
         toast.error("Już zagłosowałeś w tej ankiecie!")
         setHasVoted(true)
+        setIsVoting(false)
         return
       }
 
@@ -231,8 +223,8 @@ export default function VotePage() {
       setHasVoted(true)
       
       // Zapisz identyfikator lokalnie jeśli nie zalogowany
-      if (!user && userIdentifier) {
-        localStorage.setItem(`vote_${voteId}_identifier`, userIdentifier)
+      if (!user) {
+        localStorage.setItem(`vote_${voteId}_identifier`, identifier)
       }
       
       toast.success("Dziękujemy za oddanie głosu!")
@@ -254,6 +246,8 @@ export default function VotePage() {
     }
 
     if (pendingVote !== null) {
+      // Zapisz identyfikator lokalnie przed głosowaniem
+      localStorage.setItem(`vote_${voteId}_identifier`, userIdentifier)
       await submitVote(pendingVote)
     }
   }
@@ -455,29 +449,6 @@ export default function VotePage() {
         </CardFooter>
       </Card>
 
-      {/* Dialog wyboru logowania vs identyfikator */}
-      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Jak chcesz zagłosować?</DialogTitle>
-            <DialogDescription>
-              Możesz zalogować się na swoje konto lub podać identyfikator jako gość.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col gap-3">
-            <Button onClick={() => handleLoginChoice('login')} className="w-full">
-              <ShieldCheck className="w-4 h-4 mr-2" />
-              Zaloguj się na konto
-            </Button>
-            <Button onClick={() => handleLoginChoice('anonymous')} variant="outline" className="w-full">
-              <Users className="w-4 h-4 mr-2" />
-              Głosuj jako gość (podaj identyfikator)
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog identyfikatora */}
       <Dialog open={showIdentifierDialog} onOpenChange={setShowIdentifierDialog}>
         <DialogContent>
@@ -503,6 +474,11 @@ export default function VotePage() {
                 placeholder="np. Jan Kowalski, jkowalski, użytkownik123"
                 value={userIdentifier}
                 onChange={(e) => setUserIdentifier(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && userIdentifier.trim()) {
+                    confirmIdentifierAndVote()
+                  }
+                }}
               />
             </div>
           </div>
@@ -511,15 +487,22 @@ export default function VotePage() {
             <Button variant="outline" onClick={() => setShowIdentifierDialog(false)}>
               Anuluj
             </Button>
-            <Button onClick={confirmIdentifierAndVote} disabled={!userIdentifier.trim()}>
-              Zagłosuj
+            <Button onClick={confirmIdentifierAndVote} disabled={!userIdentifier.trim() || isVoting}>
+              {isVoting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Głosuję...
+                </>
+              ) : (
+                'Zagłosuj'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Login Dialog */}
-      <LoginDialog open={!showLoginDialog && !user && pendingVote !== null} onOpenChange={() => setPendingVote(null)} />
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </div>
   )
 }
