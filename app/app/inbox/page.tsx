@@ -272,7 +272,7 @@ export default function InboxPage() {
                 System Ogłoszeń
               </h1>
               <p className="text-muted-foreground">
-                Zarządzaj ogłoszeniami dla mieszkańców gminy
+                Zarządzaj ogłoszeniami
               </p>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -286,7 +286,7 @@ export default function InboxPage() {
                 <DialogHeader>
                   <DialogTitle>Nowe ogłoszenie</DialogTitle>
                   <DialogDescription>
-                    Utwórz nowe ogłoszenie dla mieszkańców gminy
+                    Utwórz nowe ogłoszenie
                   </DialogDescription>
                 </DialogHeader>
                 

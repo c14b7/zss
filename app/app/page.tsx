@@ -194,7 +194,7 @@ export default function Page() {
                     Ogłoszenia
                   </CardTitle>
                   <CardDescription>
-                    Najnowsze ogłoszenia dla mieszkańców
+                    Najnowsze ogłoszenia
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
