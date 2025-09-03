@@ -470,4 +470,42 @@ export class AnnouncementService {
   }
 }
 
+import { AnnouncementService } from './appwrite';
+import { NotificationService } from './notifications';
+
+// Extended Announcement Service with automatic notifications
+export class AnnouncementServiceWithNotifications extends AnnouncementService {
+  static async create(announcement: Parameters<typeof AnnouncementService.create>[0]) {
+    const result = await super.create(announcement);
+    
+    if (result && announcement.status === 'published') {
+      // Send automatic notification when announcement is published
+      await NotificationService.notifyNewAnnouncement(
+        announcement.title,
+        announcement.content.substring(0, 200) + '...',
+        announcement.priority,
+        result.$id
+      );
+    }
+    
+    return result;
+  }
+
+  static async update(id: string, announcement: Parameters<typeof AnnouncementService.update>[1]) {
+    const result = await super.update(id, announcement);
+    
+    // If status changed to published, send notification
+    if (result && announcement.status === 'published') {
+      await NotificationService.notifyNewAnnouncement(
+        result.title,
+        result.content.substring(0, 200) + '...',
+        result.priority,
+        result.$id
+      );
+    }
+    
+    return result;
+  }
+}
+
 export { client, databases };

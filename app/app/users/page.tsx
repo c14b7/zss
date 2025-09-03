@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Grid, List, Edit2, Check, X } from 'lucide-react';
+import { Plus, Grid, List, Edit2, Check, X, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 
 
 interface User {
@@ -167,6 +168,12 @@ export default function UsersPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Uczestnicy</h1>
                 <div className="flex gap-2">
+                    <Link href="/users/new">
+                        <Button>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Dodaj członka
+                        </Button>
+                    </Link>
                     <Button
                         variant={viewMode === 'cards' ? 'default' : 'outline'}
                         onClick={() => setViewMode('cards')}

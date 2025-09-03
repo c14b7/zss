@@ -8,7 +8,27 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 
 export const metadata: Metadata = {
   title: "ZSS - System zarządzania",
-  description: "Nowoczesny system głosowań online",
+  description: "Nowoczesny system zarządzania dla zespołów szkolno-sportowych",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ZSS",
+    startupImage: [
+      "/icons/icon-512x512.png",
+    ],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "ZSS",
+    "msapplication-TileColor": "#3b82f6",
+    "msapplication-config": "/browserconfig.xml",
+  },
 }
 
 export default function RootLayout({
@@ -18,6 +38,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pl" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
+      </head>
       <body className="font-sans">
         <ThemeProvider
           attribute="class"
