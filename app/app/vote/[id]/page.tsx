@@ -35,7 +35,7 @@ import { Badge } from "@/components/ui/badge"
 import { Client, Databases, ID } from "appwrite"
 import { useParams } from "next/navigation"
 import { Loader2, EyeOff, Users, ShieldCheck, LogOut, UserPlus } from "lucide-react"
-import { useAuth } from "@/components/auth/AuthProvider"
+import { AuthProvider, useAuth } from "@/components/auth/AuthProvider";
 import { LoginDialog } from "@/components/auth/LoginDialog"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -89,6 +89,15 @@ export default function VotePage() {
   const [showLoginDialog, setShowLoginDialog] = useState(false)
   const [pendingVote, setPendingVote] = useState<number | null>(null)
 
+  // Funkcja do uzyskania identyfikatora użytkownika
+  const getUserIdentifier = () => {
+    if (user) {
+      // Dla zalogowanych użytkowników użyj email lub name zamiast UID
+      return user.email || user.name || user.$id
+    }
+    return userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`)
+  }
+
   // Ładowanie danych ankiety
   useEffect(() => {
     const fetchVoteData = async () => {
@@ -117,12 +126,16 @@ export default function VotePage() {
         setVoteData(data)
         
         // Sprawdź czy użytkownik już głosował
-        if (user && data.voters.includes(user.$id)) {
-          setHasVoted(true)
-        } else if (!user) {
+        if (user) {
+          const userVoteIdentifier = user.email || user.name || user.$id
+          if (data.voters.includes(userVoteIdentifier)) {
+            setHasVoted(true)
+          }
+        } else {
           const identifier = localStorage.getItem(`vote_${voteId}_identifier`)
           if (identifier && data.voters.includes(identifier)) {
             setHasVoted(true)
+            setUserIdentifier(identifier)
           }
         }
         
@@ -143,28 +156,17 @@ export default function VotePage() {
   const handleVote = async (optionValue: number) => {
     if (!voteData || hasVoted) return
 
-    // Jeśli nie zalogowany, pokaż opcje
+    // Jeśli nie zalogowany i nie ma identyfikatora, poproś o identyfikator
     if (!user) {
       const storedIdentifier = localStorage.getItem(`vote_${voteId}_identifier`)
       if (!storedIdentifier) {
         setPendingVote(optionValue)
-        setShowLoginDialog(true)
+        setShowIdentifierDialog(true)
         return
       }
     }
 
     await submitVote(optionValue)
-  }
-
-  const handleLoginChoice = (choice: 'login' | 'anonymous') => {
-    setShowLoginDialog(false)
-    
-    if (choice === 'login') {
-      setShowLoginDialog(false)
-      // LoginDialog się otworzy automatycznie przez stan
-    } else {
-      setShowIdentifierDialog(true)
-    }
   }
 
   const submitVote = async (optionValue: number) => {
@@ -173,11 +175,12 @@ export default function VotePage() {
     setIsVoting(true)
     
     try {
-      const identifier = user ? user.$id : userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`)
-      const userName = user ? user.name : userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`) || 'Anonim'
+      const identifier = getUserIdentifier()
+      const userName = user ? (user.name || user.email || 'Zalogowany użytkownik') : (userIdentifier || localStorage.getItem(`vote_${voteId}_identifier`) || 'Anonim')
       
       if (!identifier) {
         toast.error("Błąd: Brak identyfikatora użytkownika")
+        setIsVoting(false)
         return
       }
 
@@ -185,6 +188,7 @@ export default function VotePage() {
       if (voteData.voters.includes(identifier)) {
         toast.error("Już zagłosowałeś w tej ankiecie!")
         setHasVoted(true)
+        setIsVoting(false)
         return
       }
 
@@ -231,8 +235,8 @@ export default function VotePage() {
       setHasVoted(true)
       
       // Zapisz identyfikator lokalnie jeśli nie zalogowany
-      if (!user && userIdentifier) {
-        localStorage.setItem(`vote_${voteId}_identifier`, userIdentifier)
+      if (!user) {
+        localStorage.setItem(`vote_${voteId}_identifier`, identifier)
       }
       
       toast.success("Dziękujemy za oddanie głosu!")
@@ -254,6 +258,8 @@ export default function VotePage() {
     }
 
     if (pendingVote !== null) {
+      // Zapisz identyfikator lokalnie przed głosowaniem
+      localStorage.setItem(`vote_${voteId}_identifier`, userIdentifier)
       await submitVote(pendingVote)
     }
   }
@@ -331,7 +337,7 @@ export default function VotePage() {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               <ShieldCheck className="w-4 h-4 mr-1" />
-              {user.name}
+              {user.name || user.email || 'Zalogowany'}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4" />
@@ -395,7 +401,7 @@ export default function VotePage() {
                         {voteData.isAnonymous && (
                           <div className="mt-2 p-2 bg-purple-50 rounded text-purple-800 text-sm">
                             <EyeOff className="w-4 h-4 inline mr-1" />
-                            To jest głosowanie niejawne - nikt nie zobaczy jak głosowałeś.
+                            Twój głos będzie anonimowy.
                           </div>
                         )}
                       </>
@@ -404,22 +410,26 @@ export default function VotePage() {
                 </AlertDialogHeader>
                 
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                  {!hasVoted && !isExpired && (
-                    <AlertDialogAction
-                      onClick={() => handleVote(option.value)}
-                      disabled={isVoting}
-                    >
-                      {isVoting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Zapisywanie...
-                        </>
-                      ) : (
-                        `Potwierdź głos: ${option.label}`
-                      )}
-                    </AlertDialogAction>
-                  )}
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowIdentifierDialog(true)}
+                    disabled={isVoting}
+                  >
+                    Użyj identyfikatora
+                  </Button>
+                  <Button 
+                    onClick={() => handleVote(option.value)}
+                    disabled={isVoting}
+                  >
+                    {isVoting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Zapisywanie...
+                      </>
+                    ) : (
+                      `Potwierdź głos: ${option.label}`
+                    )}
+                  </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -455,29 +465,6 @@ export default function VotePage() {
         </CardFooter>
       </Card>
 
-      {/* Dialog wyboru logowania vs identyfikator */}
-      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Jak chcesz zagłosować?</DialogTitle>
-            <DialogDescription>
-              Możesz zalogować się na swoje konto lub podać identyfikator jako gość.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col gap-3">
-            <Button onClick={() => handleLoginChoice('login')} className="w-full">
-              <ShieldCheck className="w-4 h-4 mr-2" />
-              Zaloguj się na konto
-            </Button>
-            <Button onClick={() => handleLoginChoice('anonymous')} variant="outline" className="w-full">
-              <Users className="w-4 h-4 mr-2" />
-              Głosuj jako gość (podaj identyfikator)
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog identyfikatora */}
       <Dialog open={showIdentifierDialog} onOpenChange={setShowIdentifierDialog}>
         <DialogContent>
@@ -503,6 +490,11 @@ export default function VotePage() {
                 placeholder="np. Jan Kowalski, jkowalski, użytkownik123"
                 value={userIdentifier}
                 onChange={(e) => setUserIdentifier(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && userIdentifier.trim()) {
+                    confirmIdentifierAndVote()
+                  }
+                }}
               />
             </div>
           </div>
@@ -511,15 +503,22 @@ export default function VotePage() {
             <Button variant="outline" onClick={() => setShowIdentifierDialog(false)}>
               Anuluj
             </Button>
-            <Button onClick={confirmIdentifierAndVote} disabled={!userIdentifier.trim()}>
-              Zagłosuj
+            <Button onClick={confirmIdentifierAndVote} disabled={!userIdentifier.trim() || isVoting}>
+              {isVoting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Głosuję...
+                </>
+              ) : (
+                'Zagłosuj'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Login Dialog */}
-      <LoginDialog open={!showLoginDialog && !user && pendingVote !== null} onOpenChange={() => setPendingVote(null)} />
+      <LoginDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} />
     </div>
   )
 }
