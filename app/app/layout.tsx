@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,8 +6,6 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ZSSR - zintegrowany system samorządowy",
@@ -23,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="pl" suppressHydrationWarning>
       <body className={cn(
-        inter.className,
         "min-h-screen bg-background font-sans antialiased"
       )}>
         <ThemeProvider
