@@ -14,21 +14,14 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   // Lista stron bez sidebar
   const pagesWithoutSidebar = [
     "/login",
-    "/register",
+    "/register", 
     "/", // strona główna
   ]
   
   // Sprawdź czy aktualna ścieżka powinna mieć sidebar
   const shouldShowSidebar = !pagesWithoutSidebar.some(path => {
-    if (path === "/vote/") {
-      // Specjalna logika dla stron głosowania użytkowników (nie admin)
-      return pathname.startsWith("/vote/") && 
-             !pathname.startsWith("/vote/manage") && 
-             !pathname.startsWith("/vote/new") &&
-             !pathname.startsWith("/vote/results")
-    }
     return pathname === path
-  })
+  }) && !pathname.match(/^\/vote\/[^/]+$/) // Ukryj sidebar dla stron głosowania (np. /vote/abc123)
 
   if (!shouldShowSidebar) {
     // Bez sidebar - pełny layout dla stron publicznych
