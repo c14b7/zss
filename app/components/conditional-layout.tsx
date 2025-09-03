@@ -36,7 +36,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <div className="ml-auto">
-            <span className="text-sm text-muted-foreground">ZSSR - zintegrowany system samorządowy</span>
+            <span className="text-sm text-muted-foreground">ZSS - system zarządzania</span>
           </div>
         </header>
         <main className="flex-1 p-4">

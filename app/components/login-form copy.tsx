@@ -118,9 +118,9 @@ export function LoginForm() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">ZSSR</h1>
+        <h1 className="text-2xl font-bold tracking-tight">ZSS</h1>
         <p className="text-muted-foreground">
-          Zintegrowany system samorządowy
+          System zarządzania
         </p>
       </div>
 

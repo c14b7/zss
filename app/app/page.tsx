@@ -111,6 +111,7 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
+
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
@@ -122,6 +123,7 @@ export default function LandingPage() {
                 </CardDescription>
               </CardContent>
             </Card>
+
 
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
