@@ -321,42 +321,45 @@ export default function VotePage() {
   }
 
   return (
-    <div className={`flex items-center justify-center p-4 ${anonymousStyles.containerClass}`}>
+    <div className={`flex items-center justify-center p-4 min-h-screen overflow-x-hidden ${anonymousStyles.containerClass}`}>
       {voteData.isAnonymous && (
-        <div className="absolute top-4 left-4 right-4 text-center">
-          <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-300">
-            <EyeOff className="w-4 h-4 mr-2" />
-            Głosowanie niejawne
+        <div className="absolute top-4 left-4 right-4 flex justify-center">
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-300 text-xs sm:text-sm">
+            <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="break-words">Głosowanie niejawne</span>
           </Badge>
         </div>
       )}
       
       {/* Panel logowania */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         {user ? (
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              <ShieldCheck className="w-4 h-4 mr-1" />
-              {user.name || user.email || 'Zalogowany'}
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs sm:text-sm max-w-[120px] sm:max-w-none">
+              <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="truncate sm:break-words">
+                {user.name || user.email || 'Zalogowany'}
+              </span>
             </Badge>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4" />
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="p-1 sm:p-2">
+              <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         ) : (
-          <Button variant="ghost" size="sm" onClick={() => setShowLoginDialog(true)}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Zaloguj się
+          <Button variant="ghost" size="sm" onClick={() => setShowLoginDialog(true)} className="text-xs sm:text-sm p-2 sm:p-3">
+            <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Zaloguj się</span>
+            <span className="sm:hidden">Login</span>
           </Button>
         )}
       </div>
 
-      <Card className={`w-full max-w-sm ${anonymousStyles.cardClass}`}>
+      <Card className={`w-full max-w-md mx-4 ${anonymousStyles.cardClass}`}>
         <CardHeader>
-          <CardTitle className={voteData.isAnonymous ? "text-purple-900" : ""}>
+          <CardTitle className={`text-lg sm:text-xl break-words ${voteData.isAnonymous ? "text-purple-900" : ""}`}>
             {voteData.title}
           </CardTitle>
-          <CardDescription className={voteData.isAnonymous ? "text-purple-700" : ""}>
+          <CardDescription className={`break-words ${voteData.isAnonymous ? "text-purple-700" : ""}`}>
             {voteData.description}
           </CardDescription>
           <div className="flex items-center gap-2">
@@ -376,11 +379,13 @@ export default function VotePage() {
               <AlertDialogTrigger asChild>
                 <Button 
                   variant={option.variant as any} 
-                  className={`w-full ${voteData.isAnonymous ? 'hover:bg-purple-50 transition-colors' : ''}`}
+                  className={`w-full h-auto py-3 px-4 text-sm break-words whitespace-normal ${voteData.isAnonymous ? 'hover:bg-purple-50 transition-colors' : ''}`}
                   disabled={hasVoted || isExpired || isVoting}
                 >
-                  {option.label} ({option.value > 0 ? '+' : ''}{option.value})
-                  {hasVoted && ` - ${voteData.results[option.value.toString()] || 0} głosów`}
+                  <span className="break-words">
+                    {option.label} ({option.value > 0 ? '+' : ''}{option.value})
+                    {hasVoted && ` - ${voteData.results[option.value.toString()] || 0} głosów`}
+                  </span>
                 </Button>
               </AlertDialogTrigger>
               

@@ -270,25 +270,27 @@ export default function ManageVotesPage() {
   }
 
   return (
-    <div className="min-h-screen p-6 ">
+    <div className="min-h-screen p-4 sm:p-6 overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Nagłówek */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl">Zarządzanie głosowaniami</CardTitle>
-                <CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-2xl break-words">Zarządzanie głosowaniami</CardTitle>
+                <CardDescription className="break-words">
                   Wszystkie utworzone ankiety i ich statystyki
                 </CardDescription>
               </div>
-              <Link href="/vote/new">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nowe głosowanie
-                </Button>
-              </Link>
+              <div className="flex-shrink-0">
+                <Link href="/vote/new">
+                  <Button className="w-full sm:w-auto">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nowe głosowanie
+                  </Button>
+                </Link>
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -353,8 +355,7 @@ export default function ManageVotesPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredVotes.map((vote) => {
+          <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">{filteredVotes.map((vote) => {
               const voteStatus = getVoteStatus(vote)
               
               return (
@@ -367,7 +368,7 @@ export default function ManageVotesPage() {
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1 min-w-0">
-                        <CardTitle className={`text-lg truncate ${
+                        <CardTitle className={`text-lg break-words ${
                           vote.isAnonymous ? 'text-purple-900' : ''
                         }`}>
                           {vote.title}
@@ -440,7 +441,7 @@ export default function ManageVotesPage() {
                   </CardHeader>
                   
                   <CardContent className="pt-0">
-                    <p className={`text-sm line-clamp-2 mb-3 ${
+                    <p className={`text-sm mb-3 line-clamp-3 break-words ${
                       vote.isAnonymous ? 'text-purple-700' : 'text-muted-foreground'
                     }`}>
                       {vote.description}

@@ -233,7 +233,7 @@ export default function UrgentIssuesPage() {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="priority">Priorytet</Label>
                     <Select value={formData.priority} onValueChange={(value: UrgentIssue['priority']) => setFormData({...formData, priority: value})}>
@@ -263,7 +263,7 @@ export default function UrgentIssuesPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="reportedBy">Zgłaszający</Label>
                     <Input
@@ -326,7 +326,7 @@ export default function UrgentIssuesPage() {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -338,7 +338,7 @@ export default function UrgentIssuesPage() {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder="Priorytet" />
               </SelectTrigger>
               <SelectContent>
@@ -363,24 +363,26 @@ export default function UrgentIssuesPage() {
             return (
               <Card key={issue.$id} className="overflow-hidden">
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg">{issue.title}</CardTitle>
-                        <Badge variant={priorityConfig[issue.priority].variant}>
-                          <PriorityIcon className="mr-1 h-3 w-3" />
-                          {priorityConfig[issue.priority].label}
-                        </Badge>
-                        <Badge variant={statusConfig[issue.status].variant}>
-                          <StatusIcon className="mr-1 h-3 w-3" />
-                          {statusConfig[issue.status].label}
-                        </Badge>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <CardTitle className="text-lg break-words">{issue.title}</CardTitle>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant={priorityConfig[issue.priority].variant}>
+                            <PriorityIcon className="mr-1 h-3 w-3" />
+                            {priorityConfig[issue.priority].label}
+                          </Badge>
+                          <Badge variant={statusConfig[issue.status].variant}>
+                            <StatusIcon className="mr-1 h-3 w-3" />
+                            {statusConfig[issue.status].label}
+                          </Badge>
+                        </div>
                       </div>
                       <CardDescription className="text-sm text-muted-foreground">
                         Zgłoszenie #{issue.reportNumber}
                       </CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button variant="outline" size="sm" onClick={() => handleEdit(issue)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -391,26 +393,26 @@ export default function UrgentIssuesPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-sm text-muted-foreground mb-4">{issue.description}</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <p className="text-sm text-muted-foreground mb-4 break-words">{issue.description}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span>Zgłosił: {issue.reportedBy}</span>
+                      <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="break-words">Zgłosił: {issue.reportedBy}</span>
                     </div>
                     {issue.assignedTo && (
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span>Przypisane: {issue.assignedTo}</span>
+                        <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="break-words">Przypisane: {issue.assignedTo}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Utworzono: {issue.$createdAt ? formatDate(issue.$createdAt) : 'Nieznana data'}</span>
+                      <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="break-words">Utworzono: {issue.$createdAt ? formatDate(issue.$createdAt) : 'Nieznana data'}</span>
                     </div>
                     {issue.deadline && (
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>Termin: {formatDate(issue.deadline)}</span>
+                        <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="break-words">Termin: {formatDate(issue.deadline)}</span>
                       </div>
                     )}
                   </div>

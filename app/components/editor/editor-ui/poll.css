@@ -3,9 +3,11 @@
   background-color: #fcfcfc;
   border-radius: 10px;
   max-width: 600px;
-  min-width: 400px;
+  min-width: 300px;
+  width: 100%;
   cursor: pointer;
   user-select: none;
+  overflow: hidden;
 }
 .PollNode__container.focused {
   outline: 2px solid rgb(60, 132, 244);
@@ -22,12 +24,17 @@
   color: #444;
   text-align: center;
   font-size: 18px;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 .PollNode__optionContainer {
   display: flex;
   flex-direction: row;
   margin-bottom: 10px;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .PollNode__optionInputWrapper {
   display: flex;
@@ -40,7 +47,8 @@
 }
 .PollNode__optionInput {
   display: flex;
-  flex: 1px;
+  flex: 1;
+  min-width: 0;
   border: 0px;
   padding: 7px;
   color: rgb(61, 135, 245);
@@ -48,6 +56,8 @@
   font-weight: bold;
   outline: 0px;
   z-index: 0;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 .PollNode__optionInput::placeholder {
   font-weight: normal;
