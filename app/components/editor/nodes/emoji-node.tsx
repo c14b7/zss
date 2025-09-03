@@ -48,7 +48,8 @@ export class EmojiNode extends TextNode {
     if (inner === null) {
       return true
     }
-    super.updateDOM(prevNode, inner as HTMLElement, config)
+    // Cast this to proper type to fix TypeScript error
+    ;(super.updateDOM as any)(prevNode, inner as HTMLElement, config)
     return false
   }
 

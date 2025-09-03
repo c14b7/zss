@@ -1,472 +1,645 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Client, Databases, Account, Query } from "appwrite";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState, useEffect } from "react"
+import { SerializedEditorState } from "lexical"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
-  Mail, 
-  Search, 
   Plus, 
-  Archive, 
+  Edit, 
   Trash2, 
-  Star, 
-  Settings,
-  BarChart3,
-  RefreshCw,
-  Menu,
-  ArrowLeft,
-  Sun,
-  Moon
-} from "lucide-react";
-import Link from "next/link";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
+  Eye, 
+  Calendar,
+  AlertTriangle,
+  Info,
+  CheckCircle,
+  Clock,
+  Megaphone
+} from "lucide-react"
+import { Editor } from "@/components/blocks/editor-00/editor"
+import { AnnouncementService, type Announcement } from "@/lib/appwrite"
 
-interface Email {
-  $id: string;
-  sender: string;
-  senderEmail: string;
-  subject: string;
-  content: string;
-  isRead: boolean;
-  isStarred: boolean;
-  $createdAt: string;
-  hasAttachment: boolean;
-}
-
-const endpoint = 'https://fra.cloud.appwrite.io/v1'
-const projectId = '687abe96000d2d31f914'
-const APPWRITE_DATABASE_ID = 'votes'
-const APPWRITE_EMAILS_COLLECTION_ID = 'emails'
-
-const client = new Client()
-  .setEndpoint(endpoint)
-  .setProject(projectId);
-
-const databases = new Databases(client);
-const account = new Account(client);
+const initialEditorValue = {
+  root: {
+    children: [
+      {
+        children: [
+          {
+            detail: 0,
+            format: 0,
+            mode: "normal",
+            style: "",
+            text: "Wprowadź treść ogłoszenia...",
+            type: "text",
+            version: 1,
+          },
+        ],
+        direction: "ltr",
+        format: "",
+        indent: 0,
+        type: "paragraph",
+        version: 1,
+      },
+    ],
+    direction: "ltr",
+    format: "",
+    indent: 0,
+    type: "root",
+    version: 1,
+  },
+} as unknown as SerializedEditorState
 
 export default function InboxPage() {
-  const [emails, setEmails] = useState<Email[]>([]);
-  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showEmailContent, setShowEmailContent] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null)
+  const [editorState, setEditorState] = useState<SerializedEditorState>(initialEditorValue)
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: "",
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
+    status: "draft" as "draft" | "published" | "archived",
+    publishedBy: "Administrator",
+    publishDate: new Date().toISOString().split('T')[0],
+    expiryDate: "",
+    category: "Ogólne"
+  })
 
   useEffect(() => {
-    checkAuth();
-    fetchEmails();
-  }, []);
+    loadAnnouncements()
+  }, [])
 
-  const checkAuth = async () => {
+  const loadAnnouncements = async () => {
     try {
-      const currentUser = await account.get();
-      setUser(currentUser);
+      setLoading(true)
+      const data = await AnnouncementService.getAll()
+      setAnnouncements(data)
     } catch (error) {
-      console.error("Auth error:", error);
-    }
-  };
-
-  const fetchEmails = async () => {
-    try {
-      setIsLoading(true);
-      const response = await databases.listDocuments(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_EMAILS_COLLECTION_ID,
-        [
-          Query.orderDesc("$createdAt"),
-          Query.limit(50)
-        ]
-      );
-      setEmails(response.documents as Email[]);
-    } catch (error) {
-      console.error("Error fetching emails:", error);
+      console.error('Error loading announcements:', error)
+      toast.error('Błąd podczas ładowania ogłoszeń')
     } finally {
-      setIsLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const markAsRead = async (emailId: string) => {
+  const handleCreateAnnouncement = async () => {
     try {
-      await databases.updateDocument(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_EMAILS_COLLECTION_ID,
-        emailId,
-        { isRead: true }
-      );
+      // Konwertuj stan editora na tekst (można rozszerzyć o lepszą konwersję HTML)
+      const content = JSON.stringify(editorState)
       
-      setEmails(prev => 
-        prev.map(email => 
-          email.$id === emailId ? { ...email, isRead: true } : email
-        )
-      );
-    } catch (error) {
-      console.error("Error marking as read:", error);
-    }
-  };
+      const newAnnouncement = {
+        ...formData,
+        content,
+        publishDate: formData.publishDate || new Date().toISOString().split('T')[0]
+      }
 
-  const toggleStar = async (emailId: string, currentStarred: boolean) => {
-    try {
-      await databases.updateDocument(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_EMAILS_COLLECTION_ID,
-        emailId,
-        { isStarred: !currentStarred }
-      );
-      
-      setEmails(prev => 
-        prev.map(email => 
-          email.$id === emailId ? { ...email, isStarred: !currentStarred } : email
-        )
-      );
-    } catch (error) {
-      console.error("Error toggling star:", error);
-    }
-  };
-
-  const deleteEmail = async (emailId: string) => {
-    try {
-      await databases.deleteDocument(
-        APPWRITE_DATABASE_ID,
-        APPWRITE_EMAILS_COLLECTION_ID,
-        emailId
-      );
-      
-      setEmails(prev => prev.filter(email => email.$id !== emailId));
-      if (selectedEmail?.$id === emailId) {
-        setSelectedEmail(null);
-        setShowEmailContent(false);
+      const result = await AnnouncementService.create(newAnnouncement)
+      if (result) {
+        toast.success('Ogłoszenie zostało utworzone')
+        setIsCreateDialogOpen(false)
+        resetForm()
+        loadAnnouncements()
+      } else {
+        toast.error('Błąd podczas tworzenia ogłoszenia')
       }
     } catch (error) {
-      console.error("Error deleting email:", error);
+      console.error('Error creating announcement:', error)
+      toast.error('Błąd podczas tworzenia ogłoszenia')
     }
-  };
+  }
 
-  const filteredEmails = emails.filter(email =>
-    email.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    email.senderEmail.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleEditAnnouncement = async () => {
+    if (!editingAnnouncement) return
 
-  const unreadCount = emails.filter(email => !email.isRead).length;
+    try {
+      const content = JSON.stringify(editorState)
+      
+      const updatedAnnouncement = {
+        ...formData,
+        content
+      }
 
-  const selectEmail = (email: Email) => {
-    setSelectedEmail(email);
-    setShowEmailContent(true);
-    if (!email.isRead) markAsRead(email.$id);
-  };
+      const result = await AnnouncementService.update(editingAnnouncement.$id, updatedAnnouncement)
+      if (result) {
+        toast.success('Ogłoszenie zostało zaktualizowane')
+        setIsEditDialogOpen(false)
+        setEditingAnnouncement(null)
+        resetForm()
+        loadAnnouncements()
+      } else {
+        toast.error('Błąd podczas aktualizacji ogłoszenia')
+      }
+    } catch (error) {
+      console.error('Error updating announcement:', error)
+      toast.error('Błąd podczas aktualizacji ogłoszenia')
+    }
+  }
 
-  const SidebarContent = () => (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Mail className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold">Zseil Mail</h1>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
-        </div>
-        
-        <Link href="/inbox/compose">
-          <Button className="w-full mb-4">
-            <Plus className="h-4 w-4 mr-2" />
-            Napisz
-          </Button>
-        </Link>
-      </div>
+  const handleDeleteAnnouncement = async (id: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć to ogłoszenie?')) return
 
-      <ScrollArea className="flex-1 px-4">
-        <nav className="space-y-2 py-4">
-          <Button variant="secondary" className="w-full justify-start">
-            <Mail className="h-4 w-4 mr-2" />
-            Odebrane
-            {unreadCount > 0 && (
-              <Badge variant="default" className="ml-auto">
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
-          
-          <Button variant="ghost" className="w-full justify-start">
-            <Star className="h-4 w-4 mr-2" />
-            Oznaczone gwiazdką
-          </Button>
-          
-          <Button variant="ghost" className="w-full justify-start">
-            <Archive className="h-4 w-4 mr-2" />
-            Zarchiwizowane
-          </Button>
-          
-          <Button variant="ghost" className="w-full justify-start">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Kosz
-          </Button>
-        </nav>
+    try {
+      const result = await AnnouncementService.delete(id)
+      if (result) {
+        toast.success('Ogłoszenie zostało usunięte')
+        loadAnnouncements()
+      } else {
+        toast.error('Błąd podczas usuwania ogłoszenia')
+      }
+    } catch (error) {
+      console.error('Error deleting announcement:', error)
+      toast.error('Błąd podczas usuwania ogłoszenia')
+    }
+  }
 
-        <Separator className="my-4" />
+  const openEditDialog = (announcement: Announcement) => {
+    setEditingAnnouncement(announcement)
+    setFormData({
+      title: announcement.title,
+      priority: announcement.priority,
+      status: announcement.status,
+      publishedBy: announcement.publishedBy,
+      publishDate: announcement.publishDate,
+      expiryDate: announcement.expiryDate || "",
+      category: announcement.category
+    })
+    
+    // Spróbuj załadować stan editora z content
+    try {
+      const editorContent = JSON.parse(announcement.content)
+      setEditorState(editorContent)
+    } catch {
+      // Jeśli nie można sparsować, użyj domyślnego
+      setEditorState({
+        root: {
+          children: [
+            {
+              children: [
+                {
+                  detail: 0,
+                  format: 0,
+                  mode: "normal",
+                  style: "",
+                  text: announcement.content || "",
+                  type: "text",
+                  version: 1,
+                },
+              ],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "paragraph",
+              version: 1,
+            },
+          ],
+          direction: "ltr",
+          format: "",
+          indent: 0,
+          type: "root",
+          version: 1,
+        },
+      } as unknown as SerializedEditorState)
+    }
+    
+    setIsEditDialogOpen(true)
+  }
 
-        <div className="space-y-2 pb-4">
-          <Link href="/inbox/analytics">
-            <Button variant="ghost" className="w-full justify-start">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analityka
-            </Button>
-          </Link>
-          
-          <Link href="/inbox/settings">
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className="h-4 w-4 mr-2" />
-              Ustawienia
-            </Button>
-          </Link>
-        </div>
-      </ScrollArea>
-    </div>
-  );
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      priority: "medium",
+      status: "draft",
+      publishedBy: "Administrator",
+      publishDate: new Date().toISOString().split('T')[0],
+      expiryDate: "",
+      category: "Ogólne"
+    })
+    setEditorState(initialEditorValue)
+  }
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return <AlertTriangle className="h-4 w-4 text-red-500" />
+      case 'high': return <AlertTriangle className="h-4 w-4 text-orange-500" />
+      case 'medium': return <Info className="h-4 w-4 text-blue-500" />
+      case 'low': return <CheckCircle className="h-4 w-4 text-green-500" />
+      default: return <Info className="h-4 w-4" />
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'text-red-600 bg-red-50 border-red-200'
+      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200'
+      case 'medium': return 'text-blue-600 bg-blue-50 border-blue-200'
+      case 'low': return 'text-green-600 bg-green-50 border-green-200'
+      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published': return 'text-green-600 bg-green-50 border-green-200'
+      case 'draft': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+      case 'archived': return 'text-gray-600 bg-gray-50 border-gray-200'
+      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+    }
+  }
+
+  const publishedAnnouncements = announcements.filter(a => a.status === 'published')
+  const draftAnnouncements = announcements.filter(a => a.status === 'draft')
+  const archivedAnnouncements = announcements.filter(a => a.status === 'archived')
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 border-r bg-card/50 backdrop-blur-sm">
-        <SidebarContent />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
-      {/* Email List */}
-      <div className={cn(
-        "w-full lg:w-80 border-r bg-card/30 backdrop-blur-sm transition-all duration-300",
-        showEmailContent && "hidden md:block"
-      )}>
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-2 mb-4">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="lg:hidden">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
-                <SidebarContent />
-              </SheetContent>
-            </Sheet>
-            
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Szukaj wiadomości..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+        {/* Header */}
+        <div className="px-4 lg:px-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                <Megaphone className="h-8 w-8 text-blue-500" />
+                System Ogłoszeń
+              </h1>
+              <p className="text-muted-foreground">
+                Zarządzaj ogłoszeniami dla mieszkańców gminy
+              </p>
             </div>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={fetchEmails}
-              disabled={isLoading}
-            >
-              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            </Button>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Nowe ogłoszenie
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Nowe ogłoszenie</DialogTitle>
+                  <DialogDescription>
+                    Utwórz nowe ogłoszenie dla mieszkańców gminy
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Tytuł ogłoszenia</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        placeholder="Wprowadź tytuł ogłoszenia"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Kategoria</Label>
+                      <Input
+                        id="category"
+                        value={formData.category}
+                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                        placeholder="np. Transport, Kultura, Ogólne"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="priority">Priorytet</Label>
+                      <Select value={formData.priority} onValueChange={(value: any) => setFormData({...formData, priority: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Niski</SelectItem>
+                          <SelectItem value="medium">Średni</SelectItem>
+                          <SelectItem value="high">Wysoki</SelectItem>
+                          <SelectItem value="urgent">Pilny</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">Szkic</SelectItem>
+                          <SelectItem value="published">Opublikowane</SelectItem>
+                          <SelectItem value="archived">Zarchiwizowane</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="publishDate">Data publikacji</Label>
+                      <Input
+                        id="publishDate"
+                        type="date"
+                        value={formData.publishDate}
+                        onChange={(e) => setFormData({...formData, publishDate: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Treść ogłoszenia</Label>
+                    <div className="border rounded-md p-4 min-h-[300px]">
+                      <Editor
+                        editorSerializedState={editorState}
+                        onSerializedChange={(value) => setEditorState(value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {setIsCreateDialogOpen(false); resetForm();}}>
+                    Anuluj
+                  </Button>
+                  <Button onClick={handleCreateAnnouncement}>
+                    Utwórz ogłoszenie
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-120px)]">
-          <div className="space-y-1 p-2">
-            {isLoading ? (
-              // Loading skeleton
-              [...Array(5)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 bg-muted rounded-full" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-muted rounded w-3/4" />
-                        <div className="h-3 bg-muted rounded w-1/2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              filteredEmails.map((email) => (
-                <Card
-                  key={email.$id}
-                  className={cn(
-                    "cursor-pointer transition-all duration-200 hover:bg-muted/50 animate-fade-in",
-                    selectedEmail?.$id === email.$id && "bg-muted ring-2 ring-primary/20",
-                    !email.isRead && "border-l-4 border-l-primary shadow-sm"
-                  )}
-                  onClick={() => selectEmail(email)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Avatar className="h-8 w-8 ring-2 ring-background">
-                          <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${email.sender}`} />
-                          <AvatarFallback className="text-xs font-medium">
-                            {email.sender.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className={cn(
-                              "text-sm truncate transition-colors",
-                              !email.isRead ? "font-semibold text-foreground" : "text-muted-foreground"
-                            )}>
-                              {email.sender}
-                            </p>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(email.$createdAt).toLocaleDateString()}
-                            </span>
+        {/* Tabs */}
+        <div className="px-4 lg:px-6">
+          <Tabs defaultValue="published" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="published">
+                Opublikowane ({publishedAnnouncements.length})
+              </TabsTrigger>
+              <TabsTrigger value="drafts">
+                Szkice ({draftAnnouncements.length})
+              </TabsTrigger>
+              <TabsTrigger value="archived">
+                Archiwum ({archivedAnnouncements.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="published" className="space-y-4">
+              <div className="grid gap-4">
+                {publishedAnnouncements.length > 0 ? (
+                  publishedAnnouncements.map((announcement) => (
+                    <Card key={announcement.$id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                              {getPriorityIcon(announcement.priority)}
+                              {announcement.title}
+                            </CardTitle>
+                            <CardDescription>
+                              {announcement.category} • Opublikowane {announcement.publishDate} • {announcement.publishedBy}
+                            </CardDescription>
                           </div>
-                          <p className={cn(
-                            "text-sm truncate transition-colors",
-                            !email.isRead ? "font-medium text-foreground" : "text-muted-foreground"
-                          )}>
-                            {email.subject}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate mt-1">
-                            {email.content.substring(0, 50)}...
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={getPriorityColor(announcement.priority)}>
+                              {announcement.priority === 'urgent' ? 'Pilne' :
+                               announcement.priority === 'high' ? 'Wysokie' :
+                               announcement.priority === 'medium' ? 'Średnie' : 'Niskie'}
+                            </Badge>
+                            <Badge variant="outline" className={getStatusColor(announcement.status)}>
+                              {announcement.status === 'published' ? 'Opublikowane' :
+                               announcement.status === 'draft' ? 'Szkic' : 'Archiwum'}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 ml-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleStar(email.$id, email.isStarred);
-                          }}
-                        >
-                          <Star className={cn(
-                            "h-3 w-3 transition-colors",
-                            email.isStarred && "fill-yellow-400 text-yellow-400"
-                          )} />
-                        </Button>
-                        {email.hasAttachment && (
-                          <div className="h-2 w-2 bg-primary rounded-full" />
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-            
-            {filteredEmails.length === 0 && !isLoading && (
-              <div className="text-center p-8 text-muted-foreground animate-fade-in">
-                <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">
-                  {searchQuery ? 'Nie znaleziono wiadomości' : 'Brak wiadomości'}
-                </p>
-                <p className="text-sm">
-                  {searchQuery ? 'Spróbuj zmienić kryteria wyszukiwania' : 'Nowe wiadomości pojawią się tutaj'}
-                </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            {announcement.expiryDate && `Wygasa: ${announcement.expiryDate}`}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(announcement)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDeleteAnnouncement(announcement.$id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Megaphone className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>Brak opublikowanych ogłoszeń</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="drafts" className="space-y-4">
+              <div className="grid gap-4">
+                {draftAnnouncements.length > 0 ? (
+                  draftAnnouncements.map((announcement) => (
+                    <Card key={announcement.$id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-yellow-500" />
+                              {announcement.title}
+                            </CardTitle>
+                            <CardDescription>
+                              {announcement.category} • Utworzony {announcement.publishDate} • {announcement.publishedBy}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={getPriorityColor(announcement.priority)}>
+                              {announcement.priority === 'urgent' ? 'Pilne' :
+                               announcement.priority === 'high' ? 'Wysokie' :
+                               announcement.priority === 'medium' ? 'Średnie' : 'Niskie'}
+                            </Badge>
+                            <Badge variant="outline" className={getStatusColor(announcement.status)}>
+                              Szkic
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            Wymaga publikacji
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => openEditDialog(announcement)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDeleteAnnouncement(announcement.$id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Clock className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>Brak szkiców ogłoszeń</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="archived" className="space-y-4">
+              <div className="grid gap-4">
+                {archivedAnnouncements.length > 0 ? (
+                  archivedAnnouncements.map((announcement) => (
+                    <Card key={announcement.$id} className="opacity-75">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <CardTitle className="flex items-center gap-2">
+                              {getPriorityIcon(announcement.priority)}
+                              {announcement.title}
+                            </CardTitle>
+                            <CardDescription>
+                              {announcement.category} • Zarchiwizowane • {announcement.publishedBy}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={getStatusColor(announcement.status)}>
+                              Archiwum
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">
+                            Zarchiwizowane ogłoszenie
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handleDeleteAnnouncement(announcement.$id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CheckCircle className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>Brak zarchiwizowanych ogłoszeń</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
-      {/* Email Content */}
-      <div className={cn(
-        "flex-1 bg-background transition-all duration-300",
-        !showEmailContent && "hidden md:block"
-      )}>
-        {selectedEmail ? (
-          <div className="h-full flex flex-col animate-fade-in">
-            <div className="border-b bg-card/50 backdrop-blur-sm p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden"
-                    onClick={() => setShowEmailContent(false)}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <Avatar className="ring-2 ring-background">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${selectedEmail.sender}`} />
-                    <AvatarFallback>{selectedEmail.sender.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h2 className="font-semibold">{selectedEmail.sender}</h2>
-                    <p className="text-sm text-muted-foreground">{selectedEmail.senderEmail}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleStar(selectedEmail.$id, selectedEmail.isStarred)}
-                  >
-                    <Star className={cn(
-                      "h-4 w-4 transition-colors",
-                      selectedEmail.isStarred && "fill-yellow-400 text-yellow-400"
-                    )} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteEmail(selectedEmail.$id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edytuj ogłoszenie</DialogTitle>
+            <DialogDescription>
+              Modyfikuj istniejące ogłoszenie
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Tytuł ogłoszenia</Label>
+                <Input
+                  id="edit-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  placeholder="Wprowadź tytuł ogłoszenia"
+                />
               </div>
-              <h1 className="text-xl font-semibold mb-2">{selectedEmail.subject}</h1>
-              <p className="text-sm text-muted-foreground">
-                {new Date(selectedEmail.$createdAt).toLocaleString()}
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">Kategoria</Label>
+                <Input
+                  id="edit-category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  placeholder="np. Transport, Kultura, Ogólne"
+                />
+              </div>
             </div>
             
-            <ScrollArea className="flex-1 p-6">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {selectedEmail.content}
-                </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-priority">Priorytet</Label>
+                <Select value={formData.priority} onValueChange={(value: any) => setFormData({...formData, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Niski</SelectItem>
+                    <SelectItem value="medium">Średni</SelectItem>
+                    <SelectItem value="high">Wysoki</SelectItem>
+                    <SelectItem value="urgent">Pilny</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </ScrollArea>
-          </div>
-        ) : (
-          <div className="h-full flex items-center justify-center text-muted-foreground animate-fade-in">
-            <div className="text-center max-w-sm mx-auto p-6">
-              <Mail className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Wybierz wiadomość</h3>
-              <p className="text-sm text-muted-foreground">
-                Kliknij na wiadomość z listy, aby wyświetlić jej zawartość
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select value={formData.status} onValueChange={(value: any) => setFormData({...formData, status: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Szkic</SelectItem>
+                    <SelectItem value="published">Opublikowane</SelectItem>
+                    <SelectItem value="archived">Zarchiwizowane</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-publishDate">Data publikacji</Label>
+                <Input
+                  id="edit-publishDate"
+                  type="date"
+                  value={formData.publishDate}
+                  onChange={(e) => setFormData({...formData, publishDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Treść ogłoszenia</Label>
+              <div className="border rounded-md p-4 min-h-[300px]">
+                <Editor
+                  editorSerializedState={editorState}
+                  onSerializedChange={(value) => setEditorState(value)}
+                />
+              </div>
             </div>
           </div>
-        )}
-      </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {setIsEditDialogOpen(false); setEditingAnnouncement(null); resetForm();}}>
+              Anuluj
+            </Button>
+            <Button onClick={handleEditAnnouncement}>
+              Zapisz zmiany
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

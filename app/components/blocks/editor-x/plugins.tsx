@@ -126,7 +126,7 @@ import { TWEET } from "@/components/editor/transformers/markdown-tweet-transform
 import { Separator } from "@/components/ui/separator"
 
 const placeholder = "Press / for commands..."
-const maxLength = 500
+const maxLength = 50000
 
 export function Plugins({ readOnly = false }: { readOnly?: boolean }) {
   const [floatingAnchorElem, setFloatingAnchorElem] =
