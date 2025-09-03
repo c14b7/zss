@@ -122,6 +122,52 @@
   body {
     @apply bg-background text-foreground;
   }
+  html, body {
+    overflow-x: hidden;
+  }
+}
+
+/* Responsive text wrapping utilities */
+@layer utilities {
+  .break-words-safe {
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  .text-responsive {
+    @apply text-sm sm:text-base;
+  }
+  
+  .title-responsive {
+    @apply text-lg sm:text-xl;
+  }
+}
+
+/* Mobile-specific responsiveness fixes */
+@media (max-width: 640px) {
+  .break-words-mobile {
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+  
+  /* Ensure cards don't overflow on mobile */
+  .card-responsive {
+    max-width: 100vw;
+    overflow: hidden;
+  }
+  
+  /* Ensure buttons wrap text properly */
+  .btn-mobile {
+    white-space: normal !important;
+    word-wrap: break-word;
+    text-align: center;
+    min-height: auto;
+    height: auto;
+    padding: 0.75rem 1rem;
+  }
 }
 
 /* Styles for readonly editor */
