@@ -204,7 +204,7 @@ export class DocumentImporter {
     }
     
     // Convert markdown to plain text (simplified)
-    let plainText = content
+    const plainText = content
       .replace(/^#{1,6}\s+/gm, '') // Remove headers
       .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
       .replace(/\*(.*?)\*/g, '$1') // Remove italic

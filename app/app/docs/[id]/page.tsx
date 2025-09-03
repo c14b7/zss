@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import { Client, Databases, Storage } from "appwrite"
 import { Editor } from "@/components/blocks/editor-x/editor"
 import { documentExporter } from "@/lib/document-exporter"
-import { ArrowLeft, Globe, Users, Lock, Share2, Download, Edit, FileText, Calendar, User, Tag, Trash2, FileDown } from "lucide-react"
+import { ArrowLeft, Globe, FileText, Calendar, Tag } from "lucide-react"
 
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
@@ -24,7 +24,7 @@ interface Document {
   title: string
   type: 'text' | 'file'
   content?: string
-  visibility: 'public' | 'private' | 'shared'
+  visibility: 'public'
   sharedWith?: string[]
   tags: string[]
   createdBy: string
@@ -69,21 +69,6 @@ export default function DocumentDetailPage() {
         console.log("✅ Pobrano dokument z bazy danych:", result)
 
         const documentData = result as unknown as Document
-
-        // Check permissions
-        if (documentData.visibility === 'private' && documentData.createdBy !== currentUser) {
-          setError("Nie masz uprawnień do przeglądania tego dokumentu")
-          setIsLoading(false)
-          return
-        }
-
-        if (documentData.visibility === 'shared' && 
-            documentData.createdBy !== currentUser && 
-            !documentData.sharedWith?.includes(currentUser)) {
-          setError("Nie masz uprawnień do przeglądania tego dokumentu")
-          setIsLoading(false)
-          return
-        }
 
         setDocument(documentData)
 
@@ -200,22 +185,12 @@ export default function DocumentDetailPage() {
     }
   }
 
-  const getVisibilityIcon = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return <Globe className="h-4 w-4 text-green-500" />
-      case 'shared': return <Users className="h-4 w-4 text-blue-500" />
-      case 'private': return <Lock className="h-4 w-4 text-red-500" />
-      default: return <Lock className="h-4 w-4" />
-    }
+  const getVisibilityIcon = () => {
+    return <Globe className="h-4 w-4 text-green-500" />
   }
 
-  const getVisibilityText = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return 'Publiczny'
-      case 'shared': return 'Udostępniony'
-      case 'private': return 'Prywatny'
-      default: return visibility
-    }
+  const getVisibilityText = () => {
+    return 'Publiczny'
   }
 
   const canEdit = () => {
@@ -402,8 +377,8 @@ export default function DocumentDetailPage() {
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  {getVisibilityIcon(document.visibility)}
-                  <span>{getVisibilityText(document.visibility)}</span>
+                  {getVisibilityIcon()}
+                  <span>{getVisibilityText()}</span>
                 </div>
               </div>
 
@@ -418,16 +393,6 @@ export default function DocumentDetailPage() {
                       </Badge>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Shared with */}
-              {document.visibility === 'shared' && document.sharedWith && document.sharedWith.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    Udostępniono: {document.sharedWith.join(', ')}
-                  </span>
                 </div>
               )}
 
