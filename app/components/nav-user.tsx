@@ -7,6 +7,9 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/components/auth/AuthProvider"
+import { toast } from "sonner"
 
 import {
   Avatar,
@@ -39,6 +42,27 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { logout } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      toast.success("Wylogowano pomyślnie")
+      router.push("/login")
+    } catch (error) {
+      toast.error("Błąd podczas wylogowywania")
+      console.error("Logout error:", error)
+    }
+  }
+
+  const handleAccountClick = () => {
+    router.push("/account")
+  }
+
+  const handleNotificationsClick = () => {
+    toast.info("Powiadomienia - funkcja w przygotowaniu")
+  }
 
   return (
     <SidebarMenu>
@@ -84,17 +108,17 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAccountClick}>
                 <IconUserCircle />
                 Konto
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleNotificationsClick}>
                 <IconNotification />
                 Powiadomienia
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />
               Wyloguj się
             </DropdownMenuItem>
