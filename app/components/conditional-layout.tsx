@@ -21,7 +21,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   // Sprawdź czy aktualna ścieżka powinna mieć sidebar
   const shouldShowSidebar = !pagesWithoutSidebar.some(path => {
     return pathname === path
-  }) && !pathname.match(/^\/vote\/[^/]+$/) // Ukryj sidebar dla stron głosowania (np. /vote/abc123)
+  }) && !pathname.match(/^\/vote\/[^/]+$/) || pathname === "/vote/manage" || pathname === "/vote/new" // Pokaż sidebar dla zarządzania głosowaniami, ukryj tylko dla stron głosowania (np. /vote/abc123)
 
   if (!shouldShowSidebar) {
     // Bez sidebar - pełny layout dla stron publicznych
