@@ -7,12 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Client, Databases } from "appwrite"
 import { Editor } from "@/components/blocks/editor-x/editor"
-import { ArrowLeft, Globe, Users, Lock, Plus, X, Save } from "lucide-react"
+import { ArrowLeft, Plus, X, Save } from "lucide-react"
 
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
@@ -25,7 +24,7 @@ interface Document {
   title: string
   type: 'text' | 'file'
   content?: string
-  visibility: 'public' | 'private' | 'shared'
+  visibility: 'public'
   sharedWith?: string[]
   tags: string[]
   createdBy: string
@@ -40,9 +39,7 @@ export default function EditDocumentPage() {
   const router = useRouter()
   const [document, setDocument] = useState<Document | null>(null)
   const [title, setTitle] = useState("")
-  const [visibility, setVisibility] = useState<'public' | 'private' | 'shared'>('private')
-  const [sharedWith, setSharedWith] = useState<string[]>([])
-  const [newSharedUser, setNewSharedUser] = useState("")
+  const [visibility] = useState<'public'>('public')
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
   const [content, setContent] = useState<SerializedEditorState | null>(null)
@@ -92,8 +89,6 @@ export default function EditDocumentPage() {
 
         setDocument(documentData)
         setTitle(documentData.title)
-        setVisibility(documentData.visibility)
-        setSharedWith(documentData.sharedWith || [])
         setTags(documentData.tags || [])
 
         // Parse editor content
@@ -164,17 +159,6 @@ export default function EditDocumentPage() {
     setContent(value)
   }
 
-  const addSharedUser = () => {
-    if (newSharedUser.trim() && !sharedWith.includes(newSharedUser.trim())) {
-      setSharedWith([...sharedWith, newSharedUser.trim()])
-      setNewSharedUser("")
-    }
-  }
-
-  const removeSharedUser = (userToRemove: string) => {
-    setSharedWith(sharedWith.filter(user => user !== userToRemove))
-  }
-
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       setTags([...tags, newTag.trim()])
@@ -202,11 +186,6 @@ export default function EditDocumentPage() {
       return
     }
 
-    if (visibility === 'shared' && sharedWith.length === 0) {
-      toast.error("Określ z kim chcesz udostępnić dokument")
-      return
-    }
-
     setIsSaving(true)
 
     try {
@@ -214,7 +193,6 @@ export default function EditDocumentPage() {
         title,
         content: JSON.stringify(content),
         visibility,
-        ...(visibility === 'shared' ? { sharedWith } : { sharedWith: [] }),
         tags,
       }
 
@@ -318,7 +296,7 @@ export default function EditDocumentPage() {
             
             <CardContent className="space-y-8">
               {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="title" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Tytuł dokumentu
@@ -333,74 +311,7 @@ export default function EditDocumentPage() {
                     className="h-11 text-base border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                 </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Widoczność dokumentu
-                  </Label>
-                  <RadioGroup 
-                    value={visibility} 
-                    onValueChange={(value) => setVisibility(value as any)}
-                    disabled={isSaving}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="private" />
-                      <label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
-                        <Lock className="h-4 w-4 text-red-500" />
-                        <span>Prywatny</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="shared" id="shared" />
-                      <label htmlFor="shared" className="flex items-center gap-2 cursor-pointer">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>Udostępniony</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="public" />
-                      <label htmlFor="public" className="flex items-center gap-2 cursor-pointer">
-                        <Globe className="h-4 w-4 text-green-500" />
-                        <span>Publiczny</span>
-                      </label>
-                    </div>
-                  </RadioGroup>
-                </div>
               </div>
-
-              {/* Shared Users */}
-              {visibility === 'shared' && (
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Udostępnij użytkownikom
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Wpisz email użytkownika"
-                      value={newSharedUser}
-                      onChange={e => setNewSharedUser(e.target.value)}
-                      onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addSharedUser())}
-                      className="flex-1"
-                    />
-                    <Button type="button" variant="outline" onClick={addSharedUser}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {sharedWith.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {sharedWith.map((user, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {user}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => removeSharedUser(user)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Tags */}
               <div className="space-y-3">

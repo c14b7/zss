@@ -27,8 +27,6 @@ import {
   Filter,
   MoreHorizontal,
   FolderOpen,
-  Users,
-  Lock,
   Globe,
   Calendar,
   FileImage,
@@ -53,7 +51,7 @@ interface Document {
   fileName?: string
   fileSize?: number
   mimeType?: string
-  visibility: 'public' | 'private' | 'shared'
+  visibility: 'public'
   sharedWith?: string[] // Array of user IDs/emails
   tags: string[]
   createdBy: string
@@ -146,7 +144,7 @@ export default function DocumentsPage() {
             fileName: file.name,
             fileSize: file.size,
             mimeType: file.type,
-            visibility: 'private',
+            visibility: 'public',
             tags: [],
             createdBy: currentUser
           }
@@ -239,12 +237,7 @@ export default function DocumentsPage() {
   }
 
   const getVisibilityIcon = (visibility: string) => {
-    switch (visibility) {
-      case 'public': return <Globe className="h-4 w-4 text-green-500" />
-      case 'shared': return <Users className="h-4 w-4 text-blue-500" />
-      case 'private': return <Lock className="h-4 w-4 text-red-500" />
-      default: return <Lock className="h-4 w-4" />
-    }
+    return <Globe className="h-4 w-4 text-green-500" />
   }
 
   const formatFileSize = (bytes?: number) => {
@@ -272,9 +265,7 @@ export default function DocumentsPage() {
     const matchesType = filterType === 'all' || 
                        (filterType === 'text' && doc.type === 'text') ||
                        (filterType === 'file' && doc.type === 'file') ||
-                       (filterType === 'public' && doc.visibility === 'public') ||
-                       (filterType === 'private' && doc.visibility === 'private') ||
-                       (filterType === 'shared' && doc.visibility === 'shared')
+                       (filterType === 'public' && doc.visibility === 'public')
     
     return matchesSearch && matchesType
   })
@@ -363,8 +354,6 @@ export default function DocumentsPage() {
                   <SelectItem value="text">Dokumenty tekstowe</SelectItem>
                   <SelectItem value="file">Pliki</SelectItem>
                   <SelectItem value="public">Publiczne</SelectItem>
-                  <SelectItem value="private">Prywatne</SelectItem>
-                  <SelectItem value="shared">Udostępnione</SelectItem>
                 </SelectContent>
               </Select>
 

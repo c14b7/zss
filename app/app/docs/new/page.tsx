@@ -7,14 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Client, Databases, ID } from "appwrite"
 import { Editor } from "@/components/blocks/editor-x/editor"
-import { ArrowLeft, Globe, Users, Lock, Plus, X } from "lucide-react"
+import { ArrowLeft, Plus, X } from "lucide-react"
 
 const client = new Client()
   .setEndpoint("https://fra.cloud.appwrite.io/v1")
@@ -27,9 +24,7 @@ export default function NewDocumentPage() {
   
   const router = useRouter()
   const [title, setTitle] = useState("")
-  const [visibility, setVisibility] = useState<'public' | 'private' | 'shared'>('private')
-  const [sharedWith, setSharedWith] = useState<string[]>([])
-  const [newSharedUser, setNewSharedUser] = useState("")
+  const [visibility] = useState<'public'>('public')
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
   const [content, setContent] = useState<SerializedEditorState>({
@@ -64,17 +59,6 @@ export default function NewDocumentPage() {
     setContent(value)
   }
 
-  const addSharedUser = () => {
-    if (newSharedUser.trim() && !sharedWith.includes(newSharedUser.trim())) {
-      setSharedWith([...sharedWith, newSharedUser.trim()])
-      setNewSharedUser("")
-    }
-  }
-
-  const removeSharedUser = (userToRemove: string) => {
-    setSharedWith(sharedWith.filter(user => user !== userToRemove))
-  }
-
   const addTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       setTags([...tags, newTag.trim()])
@@ -93,7 +77,6 @@ export default function NewDocumentPage() {
     console.log("📝 Dane dokumentu:", {
       title: title.trim(),
       visibility,
-      sharedWith,
       tags,
       contentStructure: content
     })
@@ -113,11 +96,6 @@ export default function NewDocumentPage() {
       return
     }
 
-    if (visibility === 'shared' && sharedWith.length === 0) {
-      toast.error("Określ z kim chcesz udostępnić dokument")
-      return
-    }
-
     setIsLoading(true)
     console.log("💾 Rozpoczynam zapis do bazy danych...")
 
@@ -127,7 +105,6 @@ export default function NewDocumentPage() {
         type: 'text',
         content: JSON.stringify(content),
         visibility,
-        ...(visibility === 'shared' ? { sharedWith } : {}),
         tags,
         createdBy: currentUser,
       }
@@ -160,24 +137,6 @@ export default function NewDocumentPage() {
     } finally {
       setIsLoading(false)
       console.log("🏁 Zakończono proces zapisywania")
-    }
-  }
-
-  const getVisibilityIcon = (vis: string) => {
-    switch (vis) {
-      case 'public': return <Globe className="h-4 w-4" />
-      case 'shared': return <Users className="h-4 w-4" />
-      case 'private': return <Lock className="h-4 w-4" />
-      default: return <Lock className="h-4 w-4" />
-    }
-  }
-
-  const getVisibilityDescription = (vis: string) => {
-    switch (vis) {
-      case 'public': return "Wszyscy użytkownicy mogą przeglądać ten dokument"
-      case 'shared': return "Tylko wybrani użytkownicy mogą przeglądać ten dokument"
-      case 'private': return "Tylko Ty możesz przeglądać ten dokument"
-      default: return ""
     }
   }
 
@@ -230,77 +189,7 @@ export default function NewDocumentPage() {
                     className="h-11 text-base border-slate-300 dark:border-slate-600 focus:border-blue-500 dark:focus:border-blue-400"
                   />
                 </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Widoczność dokumentu
-                  </Label>
-                  <RadioGroup 
-                    value={visibility} 
-                    onValueChange={(value) => setVisibility(value as any)}
-                    disabled={isLoading}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="private" />
-                      <label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
-                        <Lock className="h-4 w-4 text-red-500" />
-                        <span>Prywatny</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="shared" id="shared" />
-                      <label htmlFor="shared" className="flex items-center gap-2 cursor-pointer">
-                        <Users className="h-4 w-4 text-blue-500" />
-                        <span>Udostępniony</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="public" />
-                      <label htmlFor="public" className="flex items-center gap-2 cursor-pointer">
-                        <Globe className="h-4 w-4 text-green-500" />
-                        <span>Publiczny</span>
-                      </label>
-                    </div>
-                  </RadioGroup>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {getVisibilityDescription(visibility)}
-                  </p>
-                </div>
               </div>
-
-              {/* Shared Users */}
-              {visibility === 'shared' && (
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Udostępnij użytkownikom
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Wpisz email użytkownika"
-                      value={newSharedUser}
-                      onChange={e => setNewSharedUser(e.target.value)}
-                      onKeyPress={e => e.key === 'Enter' && (e.preventDefault(), addSharedUser())}
-                      className="flex-1"
-                    />
-                    <Button type="button" variant="outline" onClick={addSharedUser}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {sharedWith.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {sharedWith.map((user, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {user}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => removeSharedUser(user)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Tags */}
               <div className="space-y-3">
