@@ -16,6 +16,7 @@ import {
   Home,
   Eye,
   Folder,
+  TriangleAlert
 } from "lucide-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -50,7 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "Dashboard",
-        url: "/dashboard",
+        url: "/",
         icon: Home,
       },
       {
@@ -91,6 +92,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         name: "Dokumenty",
         url: "/docs",
         icon: Folder,
+      },
+        {
+        name: "Sprawy klasowe",
+        url: "/urgent",
+        icon: TriangleAlert,
       },
       {
         name: "Raporty",

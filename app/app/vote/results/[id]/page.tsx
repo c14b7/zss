@@ -132,7 +132,7 @@ export default function VoteResultsPage() {
             option: option.label,
             votes,
             percentage: Math.round(percentage * 10) / 10,
-            fill: chartConfig[colorKey as keyof typeof chartConfig]?.color || chartConfig.inne.color,
+            fill: (chartConfig[colorKey as keyof typeof chartConfig] as any)?.color || (chartConfig.inne as any).color,
             label: option.label,
             value: option.value
           }

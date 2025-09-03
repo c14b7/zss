@@ -5,7 +5,7 @@ import { Client, Account, Models } from 'appwrite';
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
-  loading: boolean;
+  loading: boolean; 
   login: (email: string, password: string) => Promise<Models.User<Models.Preferences>>;
   register: (email: string, password: string, name: string) => Promise<Models.User<Models.Preferences>>;
   logout: () => Promise<void>;
@@ -21,6 +21,8 @@ const client = new Client()
   .setEndpoint(endpoint)
   .setProject(projectId);
 
+console.log('Appwrite client configured:', { endpoint, projectId });
+
 const account = new Account(client);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -30,9 +32,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       setLoading(true);
+      console.log('Checking authentication...');
       const currentUser = await account.get();
+      console.log('User found:', currentUser);
       setUser(currentUser);
-    } catch (error) {
+    } catch (error: any) {
+      console.log('No authenticated user:', error?.message || error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -41,12 +46,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login with:', { email, endpoint, projectId });
       await account.createEmailPasswordSession(email, password);
       const currentUser = await account.get();
       setUser(currentUser);
       return currentUser;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        type: error?.type
+      });
       throw error;
     }
   };
@@ -55,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await account.create('unique()', email, password, name);
       return await login(email, password);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       throw error;
     }
@@ -65,13 +76,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await account.deleteSession('current');
       setUser(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Logout error:', error);
       throw error;
     }
   };
 
   useEffect(() => {
+    // Test connection to Appwrite
+    const testConnection = async () => {
+      try {
+        console.log('Testing Appwrite connection...');
+        // Try to get account info (will fail if not logged in, but should not give scope error)
+        await account.get();
+      } catch (error: any) {
+        console.log('Connection test result:', {
+          message: error?.message,
+          code: error?.code,
+          type: error?.type
+        });
+      }
+    };
+    
+    testConnection();
     checkAuth();
   }, []);
 

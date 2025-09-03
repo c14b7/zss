@@ -2,13 +2,20 @@
 
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
 
 type Props = {
   data: { date: string; votes: number }[]
   title?: string
 }
+
+const chartConfig = {
+  votes: {
+    label: "Głosy",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig
 
 export function VoteTrendsChart({ data, title = "Trendy głosowań" }: Props) {
   return (
@@ -17,7 +24,7 @@ export function VoteTrendsChart({ data, title = "Trendy głosowań" }: Props) {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer className="h-[260px]">
+        <ChartContainer config={chartConfig} className="h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data}>
               <defs>
