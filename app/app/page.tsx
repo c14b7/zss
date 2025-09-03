@@ -59,7 +59,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">ZSSR</span>
-              <Badge className="ml-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0">Premium</Badge>
+              <Badge className="ml-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0">Beta</Badge>
             </div>
             <div className="flex items-center gap-4">
               <Link href="/login">
@@ -139,7 +139,7 @@ export default function LandingPage() {
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-200/50 backdrop-blur-sm mb-6">
               <Award className="h-4 w-4 text-indigo-600" />
-              <span className="text-sm font-medium text-indigo-700">Funkcje premium</span>
+              <span className="text-sm font-medium text-indigo-700">Funkcje Beta</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Wszystko czego potrzebujesz
@@ -284,7 +284,7 @@ export default function LandingPage() {
                     <Award className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Premium Support 24/7</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">Beta Support 24/7</h3>
                     <p className="text-gray-600">Dedykowane wsparcie techniczne w języku polskim</p>
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">ZSSR</span>
-                <Badge className="ml-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 text-xs">Premium</Badge>
+                <Badge className="ml-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-0 text-xs">Beta</Badge>
               </div>
               <p className="text-gray-600 mb-6 leading-relaxed max-w-md">
                 Zintegrowany System Samorządowy Rzeczypospolitej - najbardziej zaawansowane 
@@ -409,7 +409,7 @@ export default function LandingPage() {
             </div>
             
             <div>
-              <h3 className="font-bold text-gray-900 mb-6 text-lg">Funkcje Premium</h3>
+              <h3 className="font-bold text-gray-900 mb-6 text-lg">Funkcje Beta</h3>
               <ul className="space-y-3 text-gray-600">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
@@ -443,7 +443,7 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Award className="h-4 w-4 text-indigo-500" />
-                  <span>Premium Support</span>
+                  <span>Beta Support</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-indigo-500" />
@@ -456,7 +456,7 @@ export default function LandingPage() {
           <div className="border-t border-gray-200 mt-16 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-600 mb-4 md:mb-0">
-                &copy; 2024 ZSSR Premium. Wszystkie prawa zastrzeżone.
+                &copy; 2024 ZSSR Beta. Wszystkie prawa zastrzeżone.
               </p>
               <div className="flex items-center gap-4 text-sm text-gray-500">
                 <span>Made with</span>
