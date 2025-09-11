@@ -10,6 +10,8 @@ const projectsCollectionId = 'projects'; // ID kolekcji projektów
 const urgentIssuesCollectionId = 'urgent_issues'; // ID kolekcji pilnych spraw
 const budgetTransactionsCollectionId = 'budget_transactions'; // ID kolekcji transakcji budżetowych
 const announcementsCollectionId = 'announcements'; // ID kolekcji ogłoszeń
+const votesCollectionId = 'votes'; // ID kolekcji głosowań
+const usersCollectionId = 'users'; // ID kolekcji użytkowników
 
 // Inicjalizacja klienta
 const client = new Client()
@@ -58,6 +60,43 @@ export interface Announcement extends Models.Document {
   publishDate: string;
   expiryDate?: string;
   category: string;
+}
+
+export interface Vote extends Models.Document {
+  title: string;
+  description: string;
+  category: string;
+  options: string; // JSON string of VoteOption[]
+  deadline: string;
+  expirationTime?: string; // New: specific time for voting expiration
+  totalVotes: number;
+  results: string; // JSON string of Record<string, number>
+  isAnonymous: boolean;
+  voters: string; // JSON string of string[]
+  isFinished: boolean; // New: manual end voting capability
+  endedBy?: string; // New: who manually ended the voting
+  endedAt?: string; // New: when it was manually ended
+  createdBy: string;
+}
+
+export interface VoteOption {
+  value: number;
+  label: string;
+  description: string;
+  variant: "default" | "destructive" | "outline";
+}
+
+export interface AppUser extends Models.Document {
+  firstName: string;
+  lastName: string;
+  function?: string;
+  group: string;
+  email?: string;
+  phone?: string;
+  notes?: string;
+  isVerified: boolean; // New: verification status
+  verifiedBy?: string; // New: who verified this user
+  verifiedAt?: string; // New: when user was verified
 }
 
 export interface DashboardStats {
@@ -505,6 +544,241 @@ export class AnnouncementServiceWithNotifications extends AnnouncementService {
     }
     
     return result;
+  }
+}
+
+// Service dla głosowań
+export class VoteService {
+  static async getAll(): Promise<Vote[]> {
+    try {
+      const response = await databases.listDocuments(
+        databaseId,
+        votesCollectionId,
+        [Query.orderDesc('$createdAt')]
+      );
+      return response.documents as unknown as Vote[];
+    } catch (error) {
+      console.error('Error fetching votes:', error);
+      return [];
+    }
+  }
+
+  static async getById(id: string): Promise<Vote | null> {
+    try {
+      const response = await databases.getDocument(
+        databaseId,
+        votesCollectionId,
+        id
+      );
+      return response as unknown as Vote;
+    } catch (error) {
+      console.error('Error fetching vote:', error);
+      return null;
+    }
+  }
+
+  static async create(vote: Omit<Vote, keyof Models.Document>): Promise<Vote | null> {
+    try {
+      const response = await databases.createDocument(
+        databaseId,
+        votesCollectionId,
+        ID.unique(),
+        vote as any
+      );
+      return response as unknown as Vote;
+    } catch (error) {
+      console.error('Error creating vote:', error);
+      return null;
+    }
+  }
+
+  static async update(id: string, vote: Partial<Omit<Vote, keyof Models.Document>>): Promise<Vote | null> {
+    try {
+      const response = await databases.updateDocument(
+        databaseId,
+        votesCollectionId,
+        id,
+        vote as any
+      );
+      return response as unknown as Vote;
+    } catch (error) {
+      console.error('Error updating vote:', error);
+      return null;
+    }
+  }
+
+  static async endVote(id: string, endedBy: string): Promise<Vote | null> {
+    try {
+      const response = await databases.updateDocument(
+        databaseId,
+        votesCollectionId,
+        id,
+        {
+          isFinished: true,
+          endedBy,
+          endedAt: new Date().toISOString()
+        }
+      );
+      return response as unknown as Vote;
+    } catch (error) {
+      console.error('Error ending vote:', error);
+      return null;
+    }
+  }
+
+  static async castVote(voteId: string, option: number, voterName: string): Promise<Vote | null> {
+    try {
+      const vote = await this.getById(voteId);
+      if (!vote) return null;
+
+      // Check if voting is still active
+      const now = new Date();
+      const deadline = new Date(vote.deadline);
+      const expirationTime = vote.expirationTime ? new Date(vote.expirationTime) : null;
+      
+      if (vote.isFinished || deadline < now || (expirationTime && expirationTime < now)) {
+        throw new Error('Voting has ended');
+      }
+
+      // Parse current data
+      const results = JSON.parse(vote.results);
+      const voters = JSON.parse(vote.voters);
+
+      // Check if user already voted
+      if (voters.includes(voterName)) {
+        throw new Error('User has already voted');
+      }
+
+      // Update results
+      results[option.toString()] = (results[option.toString()] || 0) + 1;
+      voters.push(voterName);
+
+      // Update vote
+      return await this.update(voteId, {
+        results: JSON.stringify(results),
+        voters: JSON.stringify(voters),
+        totalVotes: vote.totalVotes + 1
+      });
+    } catch (error) {
+      console.error('Error casting vote:', error);
+      return null;
+    }
+  }
+
+  static isVoteActive(vote: Vote): boolean {
+    if (vote.isFinished) return false;
+    
+    const now = new Date();
+    const deadline = new Date(vote.deadline);
+    const expirationTime = vote.expirationTime ? new Date(vote.expirationTime) : null;
+    
+    return deadline > now && (!expirationTime || expirationTime > now);
+  }
+}
+
+// Service dla użytkowników aplikacji
+export class AppUserService {
+  static async getAll(): Promise<AppUser[]> {
+    try {
+      const response = await databases.listDocuments(
+        databaseId,
+        usersCollectionId,
+        [Query.orderAsc('firstName')]
+      );
+      return response.documents as unknown as AppUser[];
+    } catch (error) {
+      console.error('Error fetching app users:', error);
+      return [];
+    }
+  }
+
+  static async getById(id: string): Promise<AppUser | null> {
+    try {
+      const response = await databases.getDocument(
+        databaseId,
+        usersCollectionId,
+        id
+      );
+      return response as unknown as AppUser;
+    } catch (error) {
+      console.error('Error fetching app user:', error);
+      return null;
+    }
+  }
+
+  static async getByEmail(email: string): Promise<AppUser | null> {
+    try {
+      const response = await databases.listDocuments(
+        databaseId,
+        usersCollectionId,
+        [Query.equal('email', email)]
+      );
+      
+      if (response.documents.length > 0) {
+        return response.documents[0] as unknown as AppUser;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching app user by email:', error);
+      return null;
+    }
+  }
+
+  static async create(user: Omit<AppUser, keyof Models.Document>): Promise<AppUser | null> {
+    try {
+      const response = await databases.createDocument(
+        databaseId,
+        usersCollectionId,
+        ID.unique(),
+        user as any
+      );
+      return response as unknown as AppUser;
+    } catch (error) {
+      console.error('Error creating app user:', error);
+      return null;
+    }
+  }
+
+  static async update(id: string, user: Partial<Omit<AppUser, keyof Models.Document>>): Promise<AppUser | null> {
+    try {
+      const response = await databases.updateDocument(
+        databaseId,
+        usersCollectionId,
+        id,
+        user as any
+      );
+      return response as unknown as AppUser;
+    } catch (error) {
+      console.error('Error updating app user:', error);
+      return null;
+    }
+  }
+
+  static async verifyUser(id: string, verifiedBy: string): Promise<AppUser | null> {
+    try {
+      return await this.update(id, {
+        isVerified: true,
+        verifiedBy,
+        verifiedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error verifying user:', error);
+      return null;
+    }
+  }
+
+  static async getVerifiedUsers(): Promise<AppUser[]> {
+    try {
+      const response = await databases.listDocuments(
+        databaseId,
+        usersCollectionId,
+        [Query.equal('isVerified', true), Query.orderAsc('firstName')]
+      );
+      return response.documents as unknown as AppUser[];
+    } catch (error) {
+      console.error('Error fetching verified users:', error);
+      return [];
+    }
   }
 }
 

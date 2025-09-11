@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { TrendingUp, TrendingDown, Minus, Calendar, Users, BarChart3, EyeOff } from "lucide-react"
+import { TrendingUp, TrendingDown, Minus, Calendar, Users, BarChart3, EyeOff, FileDown, StopCircle, Clock } from "lucide-react"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
 import { Client, Databases } from "appwrite"
 import { useParams } from "next/navigation"
@@ -22,7 +22,12 @@ import {
 } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { VotingSummaryGenerator } from "@/components/voting/VotingSummaryGenerator"
+import { useAuth } from "@/components/auth/AuthProvider"
+import { VoteService, Vote, VoteOption } from "@/lib/appwrite"
+import { getVotingStatusText } from "@/lib/vote-export"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface VoteOption {
   value: number
@@ -37,10 +42,15 @@ interface VoteData {
   category: string
   options: VoteOption[]
   deadline: string
+  expirationTime?: string
   totalVotes: number
   results: Record<string, number>
   isAnonymous: boolean
   voters: string[]
+  isFinished: boolean
+  endedBy?: string
+  endedAt?: string
+  createdBy: string
 }
 
 interface ChartDataItem {
@@ -85,42 +95,35 @@ const chartConfig = {
 export default function VoteResultsPage() {
   const params = useParams()
   const voteId = params.id as string
+  const { user, isVerified } = useAuth()
   
-  const [voteData, setVoteData] = useState<VoteData | null>(null)
+  const [voteData, setVoteData] = useState<Vote | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [chartData, setChartData] = useState<ChartDataItem[]>([])
-
+  const [showSummaryGenerator, setShowSummaryGenerator] = useState(false)
+  const [isEndingVote, setIsEndingVote] = useState(false)
   // Ładowanie danych ankiety
   useEffect(() => {
     const fetchVoteData = async () => {
       try {
         setIsLoading(true)
         
-        const response = await databases.getDocument(
-          'votes',
-          'votes', 
-          voteId
-        )
-
-        const data: VoteData = {
-          title: response.title,
-          description: response.description,
-          category: response.category,
-          options: JSON.parse(response.options),
-          deadline: response.deadline,
-          totalVotes: response.totalVotes || 0,
-          results: JSON.parse(response.results),
-          isAnonymous: response.isAnonymous || false,
-          voters: JSON.parse(response.voters || '[]')
+        const vote = await VoteService.getById(voteId)
+        if (!vote) {
+          setError("Nie znaleziono głosowania")
+          return
         }
 
-        setVoteData(data)
+        setVoteData(vote)
         
         // Przygotowanie danych do wykresu
-        const chartItems: ChartDataItem[] = data.options.map((option) => {
-          const votes = data.results[option.value.toString()] || 0
-          const percentage = data.totalVotes > 0 ? (votes / data.totalVotes) * 100 : 0
+        const options: VoteOption[] = JSON.parse(vote.options)
+        const results = JSON.parse(vote.results)
+        
+        const chartItems: ChartDataItem[] = options.map((option) => {
+          const votes = results[option.value.toString()] || 0
+          const percentage = vote.totalVotes > 0 ? (votes / vote.totalVotes) * 100 : 0
           
           // Mapowanie kolorów na podstawie wartości opcji
           let colorKey = "inne"
@@ -154,6 +157,27 @@ export default function VoteResultsPage() {
       fetchVoteData()
     }
   }, [voteId])
+
+  // Funkcja zakończenia głosowania (tylko dla zweryfikowanych użytkowników)
+  const handleEndVote = async () => {
+    if (!isVerified || !user || !voteData) return
+    
+    setIsEndingVote(true)
+    try {
+      const updatedVote = await VoteService.endVote(voteId, user.name)
+      if (updatedVote) {
+        setVoteData(updatedVote)
+        toast.success("Głosowanie zostało zakończone")
+      } else {
+        toast.error("Nie udało się zakończyć głosowania")
+      }
+    } catch (error) {
+      console.error("Error ending vote:", error)
+      toast.error("Błąd podczas kończenia głosowania")
+    } finally {
+      setIsEndingVote(false)
+    }
+  }
 
   // Obliczanie statystyk
   const getWinningOption = () => {
@@ -202,7 +226,14 @@ export default function VoteResultsPage() {
     )
   }
 
+  const options: VoteOption[] = JSON.parse(voteData.options)
+  const results = JSON.parse(voteData.results)
+  const voters = JSON.parse(voteData.voters)
+  
   const isExpired = new Date(voteData.deadline) < new Date()
+  const isVoteFinished = voteData.isFinished || isExpired
+  const canEndVote = isVerified && !isVoteFinished && VoteService.isVoteActive(voteData)
+  const statusInfo = getVotingStatusText(voteData.deadline, voteData.isFinished)
   const winningOption = getWinningOption()
 
   // Styling dla głosowania niejawnego
@@ -247,11 +278,26 @@ export default function VoteResultsPage() {
                         Niejawne
                       </Badge>
                     )}
+                    {/* Status głosowania */}
+                    <Badge 
+                      variant="secondary" 
+                      className={`${statusInfo.bgColor} ${statusInfo.color}`}
+                    >
+                      {statusInfo.text}
+                    </Badge>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {new Date(voteData.deadline).toLocaleDateString('pl-PL')}
-                    {isExpired && <span className="text-red-500 ml-1">(zakończone)</span>}
+                    {voteData.expirationTime && (
+                      <span>
+                        {' '}
+                        {new Date(voteData.expirationTime).toLocaleTimeString('pl-PL', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
@@ -260,6 +306,33 @@ export default function VoteResultsPage() {
                 </div>
               </div>
 
+              {/* Przyciski akcji dla zweryfikowanych użytkowników */}
+              {isVerified && isVoteFinished && (
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={() => setShowSummaryGenerator(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    Generuj podsumowanie
+                  </Button>
+                </div>
+              )}
+              
+              {/* Przycisk zakończenia głosowania dla zweryfikowanych użytkowników */}
+              {canEndVote && (
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="destructive"
+                    onClick={handleEndVote}
+                    disabled={isEndingVote}
+                    className="flex items-center gap-2"
+                  >
+                    <StopCircle className="w-4 h-4" />
+                    {isEndingVote ? "Kończenie..." : "Zakończ głosowanie"}
+                  </Button>
+                </div>
+              )}
             </div>
           </CardHeader>
         </Card>
@@ -396,13 +469,13 @@ export default function VoteResultsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {voteData.voters.length > 0 ? (
+            {voters.length > 0 ? (
               <div className="space-y-2">
                 <div className={`text-sm font-medium mb-3 ${voteData.isAnonymous ? 'text-purple-800' : 'text-muted-foreground'}`}>
-                  Łącznie głosowało: {voteData.voters.length} {voteData.voters.length === 1 ? 'osoba' : 'osób'}
+                  Łącznie głosowało: {voters.length} {voters.length === 1 ? 'osoba' : 'osób'}
                 </div>
                 <div className="grid gap-2 max-h-64 overflow-y-auto">
-                  {voteData.voters.map((voter, index) => (
+                  {voters.map((voter, index) => (
                     <div 
                       key={index}
                       className={`flex items-center justify-between p-2 rounded border ${
@@ -478,6 +551,14 @@ export default function VoteResultsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Summary Generator Modal */}
+      {showSummaryGenerator && voteData && (
+        <VotingSummaryGenerator
+          vote={voteData}
+          onClose={() => setShowSummaryGenerator(false)}
+        />
+      )}
     </div>
   )
 }
