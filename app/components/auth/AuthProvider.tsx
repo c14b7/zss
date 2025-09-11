@@ -2,9 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Client, Account, Models } from 'appwrite';
+import { AppUserService, AppUser } from '@/lib/appwrite';
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null;
+  appUser: AppUser | null;
+  isVerified: boolean;
   loading: boolean; 
   login: (email: string, password: string) => Promise<Models.User<Models.Preferences>>;
   register: (email: string, password: string, name: string) => Promise<Models.User<Models.Preferences>>;
@@ -27,7 +30,21 @@ const account = new Account(client);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Models.User<Models.Preferences> | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const loadAppUser = async (email: string) => {
+    try {
+      const userData = await AppUserService.getByEmail(email);
+      setAppUser(userData);
+      setIsVerified(userData?.isVerified || false);
+    } catch (error) {
+      console.error('Error loading app user:', error);
+      setAppUser(null);
+      setIsVerified(false);
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -36,9 +53,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await account.get();
       console.log('User found:', currentUser);
       setUser(currentUser);
+      
+      // Load additional user data
+      if (currentUser.email) {
+        await loadAppUser(currentUser.email);
+      }
     } catch (error: any) {
       console.log('No authenticated user:', error?.message || error);
       setUser(null);
+      setAppUser(null);
+      setIsVerified(false);
     } finally {
       setLoading(false);
     }
@@ -50,6 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await account.createEmailPasswordSession(email, password);
       const currentUser = await account.get();
       setUser(currentUser);
+      
+      // Load additional user data
+      if (currentUser.email) {
+        await loadAppUser(currentUser.email);
+      }
+      
       return currentUser;
     } catch (error: any) {
       console.error('Login error:', error);
@@ -65,7 +95,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, name: string) => {
     try {
       await account.create('unique()', email, password, name);
-      return await login(email, password);
+      const user = await login(email, password);
+      
+      // Create app user profile
+      const [firstName, ...lastNameParts] = name.split(' ');
+      const lastName = lastNameParts.join(' ') || '';
+      
+      const newAppUser = await AppUserService.create({
+        firstName,
+        lastName,
+        email,
+        group: 'Członek',
+        isVerified: false
+      });
+      
+      if (newAppUser) {
+        setAppUser(newAppUser);
+        setIsVerified(false);
+      }
+      
+      return user;
     } catch (error: any) {
       console.error('Registration error:', error);
       throw error;
@@ -76,6 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await account.deleteSession('current');
       setUser(null);
+      setAppUser(null);
+      setIsVerified(false);
     } catch (error: any) {
       console.error('Logout error:', error);
       throw error;
@@ -104,6 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
+    appUser,
+    isVerified,
     loading,
     login,
     register,
