@@ -292,12 +292,12 @@ export default function DocumentsPage() {
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
               Dokumenty
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1">
               Zarządzaj dokumentami organizacji ({filteredDocuments.length} dokumentów)
             </p>
           </div>

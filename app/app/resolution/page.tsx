@@ -93,13 +93,13 @@ export default function ResolutionListPage() {
   if (isLoading) {
     return (
       <div className="py-6 px-2">
-        <div className="w-full max-w-7xl mx-auto px-4">
-          <div className="mb-8 flex justify-between items-center">
+        <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                 Uchwały
               </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
                 Ładowanie uchwał...
               </p>
             </div>
@@ -124,14 +124,14 @@ export default function ResolutionListPage() {
   }
 
   return (
-    <div className="py-6 px-2 min-h-screen bg-white dark:bg-slate-900">
-      <div className="w-full max-w-7xl mx-auto px-4">
-        <div className="mb-8 flex justify-between items-center">
+    <div className="py-4 sm:py-6 px-2 min-h-screen bg-white dark:bg-slate-900">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
               Uchwały
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
               Zarządzaj uchwałami organizacji ({resolutions.length} uchwał)
             </p>
           </div>

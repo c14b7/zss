@@ -238,6 +238,44 @@
     min-height: 44px;
     min-width: 44px;
   }
+  
+  /* Responsive text sizes on mobile - scale down large headings */
+  h1, .text-3xl {
+    font-size: 1.5rem !important; /* 24px instead of 30px */
+    line-height: 2rem !important;
+  }
+  
+  h2, .text-2xl {
+    font-size: 1.25rem !important; /* 20px instead of 24px */
+    line-height: 1.75rem !important;
+  }
+  
+  /* Better mobile padding for containers */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Reduce padding in cards on mobile */
+  [class*="p-6"] {
+    padding: 1rem !important;
+  }
+  
+  [class*="p-4"] {
+    padding: 0.75rem !important;
+  }
+  
+  /* Make flex containers stack on mobile */
+  .flex.gap-4 {
+    gap: 0.75rem !important;
+  }
+  
+  /* Ensure grid layouts are single column on mobile */
+  .grid.grid-cols-2,
+  .grid.grid-cols-3,
+  .grid.grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* PWA and mobile improvements */
