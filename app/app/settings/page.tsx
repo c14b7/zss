@@ -16,7 +16,9 @@ import {
   Mail,
   MessageSquare,
   Shield,
-  Globe
+  Globe,
+  Send,
+  TestTube
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -59,6 +61,7 @@ export default function SettingsPage() {
     },
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [emailTestLoading, setEmailTestLoading] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [canInstall, setCanInstall] = useState(false);
 
@@ -128,6 +131,29 @@ export default function SettingsPage() {
       toast.error('Błąd podczas zapisywania ustawień');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTestEmailNotification = async () => {
+    setEmailTestLoading(true);
+    try {
+      const { NotificationService } = await import('@/lib/notifications');
+      const { VoteService } = await import('@/lib/appwrite');
+      
+      // Pobierz najnowsze głosowanie do testu
+      const votes = await VoteService.getAll();
+      if (votes.length > 0) {
+        const testVote = votes[0];
+        await NotificationService.sendVoteNotification(testVote);
+        toast.success('Test email powiadomienia został wysłany!');
+      } else {
+        toast.error('Brak głosowań do testowania - utwórz najpierw głosowanie');
+      }
+    } catch (error) {
+      console.error('Błąd testu email:', error);
+      toast.error('Błąd podczas wysyłania test emaila');
+    } finally {
+      setEmailTestLoading(false);
     }
   };
 
@@ -259,10 +285,18 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="pt-4">
-              <Button variant="outline" onClick={handleTestNotification}>
+            <div className="pt-4 space-y-2">
+              <Button variant="outline" onClick={handleTestNotification} className="mr-2">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                Testuj powiadomienia
+                Testuj powiadomienia push
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleTestEmailNotification}
+                disabled={emailTestLoading}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                {emailTestLoading ? 'Wysyłanie...' : 'Testuj email powiadomienia'}
               </Button>
             </div>
           </CardContent>
@@ -377,6 +411,64 @@ export default function SettingsPage() {
                   handleSettingChange('admin', 'organizationName', e.target.value)
                 }
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Panel administratora - powiadomienia email */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TestTube className="h-5 w-5" />
+              Panel administratora - Testy powiadomień
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Testowanie funkcji powiadomień email przez Appwrite Messaging z Mailgun
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                ℹ️ Instrukcje konfiguracji:
+              </h4>
+              <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-decimal list-inside">
+                <li>Skonfiguruj Provider Mailgun w Appwrite Messaging</li>
+                <li>Skopiuj Provider ID i wklej w <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">notifications.ts</code></li>
+                <li>Użyj przycisków poniżej do testowania</li>
+              </ol>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Status konfiguracji</Label>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm">Wymaga konfiguracji Provider ID</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Pliki dokumentacji</Label>
+                <div className="text-sm text-muted-foreground">
+                  📄 <code>POWIADOMIENIA_SETUP.md</code> - pełna instrukcja
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 space-y-2">
+              <Button 
+                variant="outline" 
+                onClick={handleTestEmailNotification}
+                disabled={emailTestLoading}
+                className="w-full"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {emailTestLoading ? 'Wysyłanie testu...' : 'Wyślij test powiadomienia email'}
+              </Button>
+              
+              <div className="text-xs text-muted-foreground text-center">
+                Test zostanie wysłany do wszystkich zweryfikowanych użytkowników z adresem email
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Client, Databases, ID, Query, type Models } from 'appwrite';
+import { Client, Databases, ID, Query, Messaging, type Models } from 'appwrite';
 
 // Konfiguracja Appwrite
 const endpoint = 'https://fra.cloud.appwrite.io/v1';
@@ -19,6 +19,7 @@ const client = new Client()
   .setProject(projectId);
 
 const databases = new Databases(client);
+const messaging = new Messaging(client);
 
 // Typy danych bazujące na Appwrite Models
 export interface Project extends Models.Document {
@@ -585,7 +586,20 @@ export class VoteService {
         ID.unique(),
         vote as any
       );
-      return response as unknown as Vote;
+      
+      const createdVote = response as unknown as Vote;
+      
+      // Automatycznie wyślij powiadomienie o nowym głosowaniu
+      try {
+        const { NotificationService } = await import('./notifications');
+        await NotificationService.sendVoteNotification(createdVote);
+        console.log('✅ Powiadomienie o głosowaniu wysłane');
+      } catch (notificationError) {
+        console.error('⚠️ Błąd podczas wysyłania powiadomienia:', notificationError);
+        // Nie przerywamy procesu tworzenia głosowania jeśli powiadomienie się nie powiodło
+      }
+      
+      return createdVote;
     } catch (error) {
       console.error('Error creating vote:', error);
       return null;
@@ -619,7 +633,19 @@ export class VoteService {
           endedAt: new Date().toISOString()
         }
       );
-      return response as unknown as Vote;
+      
+      const endedVote = response as unknown as Vote;
+      
+      // Automatycznie wyślij wyniki głosowania
+      try {
+        const { NotificationService } = await import('./notifications');
+        await NotificationService.sendVoteResultsNotification(endedVote);
+        console.log('✅ Wyniki głosowania wysłane');
+      } catch (notificationError) {
+        console.error('⚠️ Błąd podczas wysyłania wyników:', notificationError);
+      }
+      
+      return endedVote;
     } catch (error) {
       console.error('Error ending vote:', error);
       return null;
@@ -780,6 +806,28 @@ export class AppUserService {
       return [];
     }
   }
+
+  /**
+   * Pobiera zweryfikowanych użytkowników, którzy mają adres email
+   */
+  static async getVerifiedUsersWithEmail(): Promise<AppUser[]> {
+    try {
+      const response = await databases.listDocuments(
+        databaseId,
+        usersCollectionId,
+        [
+          Query.equal('isVerified', true), 
+          Query.isNotNull('email'),
+          Query.notEqual('email', ''),
+          Query.orderAsc('firstName')
+        ]
+      );
+      return response.documents.filter((doc: any) => doc.email && doc.email.trim() !== '') as unknown as AppUser[];
+    } catch (error) {
+      console.error('Error fetching verified users with email:', error);
+      return [];
+    }
+  }
 }
 
-export { client, databases };
+export { client, databases, messaging };

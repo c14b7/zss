@@ -199,24 +199,24 @@ export default function BudgetPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
+      <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
               Budżet
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
               Ładowanie danych...
             </p>
           </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+              <CardContent className="p-4 sm:p-6">
+                <div className="h-3 sm:h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+                <div className="h-6 sm:h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
               </CardContent>
             </Card>
           ))}
@@ -226,21 +226,34 @@ export default function BudgetPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Nagłówek */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            Budżet
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Zarządzanie finansami organizacji
-          </p>
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+      {/* Nagłówek - zoptymalizowany dla mobile */}
+      <div className="flex flex-col space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+              Budżet
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
+              Zarządzanie finansami organizacji
+            </p>
+          </div>
+          
+          <Button 
+            onClick={handleNewTransaction}
+            className="w-full sm:w-auto"
+            size="sm"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="sm:hidden">Dodaj</span>
+            <span className="hidden sm:inline">Nowa transakcja</span>
+          </Button>
         </div>
         
-        <div className="flex items-center gap-3">
+        {/* Filtry - responsywne dla mobile */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -253,7 +266,7 @@ export default function BudgetPage() {
           </Select>
           
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -266,30 +279,25 @@ export default function BudgetPage() {
               ))}
             </SelectContent>
           </Select>
-          
-          <Button onClick={handleNewTransaction}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nowa transakcja
-          </Button>
         </div>
       </div>
 
-      {/* Karty z podsumowaniem */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Karty z podsumowaniem - zoptymalizowane dla mobile */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Saldo ogółem
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${
+          <CardContent className="pt-2">
+            <div className={`text-lg sm:text-2xl font-bold ${
               summary.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {formatCurrency(summary.balance)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               {summary.balance >= 0 ? 'Dodatnie' : 'Ujemne'} saldo
             </p>
           </CardContent>
@@ -297,16 +305,16 @@ export default function BudgetPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Przychody (miesiąc)
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+          <CardContent className="pt-2">
+            <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(summary.monthlyIncome)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Ogółem: {formatCurrency(summary.totalIncome)}
             </p>
           </CardContent>
@@ -314,16 +322,16 @@ export default function BudgetPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Wydatki (miesiąc)
             </CardTitle>
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+          <CardContent className="pt-2">
+            <div className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(summary.monthlyExpenses)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Ogółem: {formatCurrency(summary.totalExpenses)}
             </p>
           </CardContent>
@@ -331,77 +339,90 @@ export default function BudgetPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Saldo (miesiąc)
             </CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${
+          <CardContent className="pt-2">
+            <div className={`text-lg sm:text-2xl font-bold ${
               summary.monthlyBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {formatCurrency(summary.monthlyBalance)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Różnica w tym miesiącu
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Wykresy i lista transakcji */}
+      {/* Wykresy i lista transakcji - responsywne */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Przegląd</TabsTrigger>
-          <TabsTrigger value="categories">Kategorie</TabsTrigger>
-          <TabsTrigger value="transactions">Transakcje</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Przegląd</span>
+            <span className="sm:hidden">Wykres</span>
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Kategorie</span>
+            <span className="sm:hidden">Kat.</span>
+          </TabsTrigger>
+          <TabsTrigger value="transactions" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Transakcje</span>
+            <span className="sm:hidden">Lista</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Przegląd budżetu</CardTitle>
-                <CardDescription>
-                  Przychody i wydatki w czasie
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Przegląd budżetu</CardTitle>
+              <CardDescription className="text-sm">
+                Przychody i wydatki w czasie
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="h-[200px] sm:h-[300px] md:h-[400px]">
                 <BudgetOverviewChart transactions={transactions} />
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Wydatki według kategorii</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Wydatki według kategorii</CardTitle>
+                <CardDescription className="text-sm">
                   Rozkład wydatków na kategorie
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <BudgetCategoryChart 
-                  transactions={transactions.filter(t => t.type === "expense")} 
-                  type="expense"
-                />
+              <CardContent className="pt-0">
+                <div className="h-[200px] sm:h-[250px]">
+                  <BudgetCategoryChart 
+                    transactions={transactions.filter(t => t.type === "expense")} 
+                    type="expense"
+                  />
+                </div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader>
-                <CardTitle>Przychody według kategorii</CardTitle>
-                <CardDescription>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Przychody według kategorii</CardTitle>
+                <CardDescription className="text-sm">
                   Rozkład przychodów na kategorie
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <BudgetCategoryChart 
-                  transactions={transactions.filter(t => t.type === "income")} 
-                  type="income"
-                />
+              <CardContent className="pt-0">
+                <div className="h-[200px] sm:h-[250px]">
+                  <BudgetCategoryChart 
+                    transactions={transactions.filter(t => t.type === "income")} 
+                    type="income"
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -409,13 +430,13 @@ export default function BudgetPage() {
 
         <TabsContent value="transactions" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Lista transakcji</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base sm:text-lg">Lista transakcji</CardTitle>
+              <CardDescription className="text-sm">
                 Wszystkie transakcje budżetowe ({transactions.length})
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0 px-0 sm:px-6">
               <BudgetTransactionsList 
                 transactions={transactions}
                 onRefresh={fetchBudgetData}

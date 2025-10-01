@@ -117,17 +117,18 @@ export default function NewUserPage() {
     };
 
     return (
-        <div className="container mx-auto p-6 max-w-2xl">
-            <div className="flex items-center gap-4 mb-6">
+        <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCancel}
+                    className="w-fit"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Powrót
                 </Button>
-                <h1 className="text-3xl font-bold">Dodaj nowego ucznia</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Dodaj nowego ucznia</h1>
             </div>
 
             <Card>
@@ -138,8 +139,8 @@ export default function NewUserPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="firstName">Imię *</Label>
                                 <Input

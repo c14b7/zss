@@ -5,7 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem,                         </Table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );tTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Grid, List, Edit2, Check, X, UserPlus } from 'lucide-react';
@@ -164,58 +169,72 @@ export default function UsersPage() {
     };
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Uczniowie</h1>
-                <div className="flex gap-2">
-                    <Link href="/users/new">
-                        <Button>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Dodaj ucznia
-                        </Button>
-                    </Link>
-                    <Button
-                        variant={viewMode === 'cards' ? 'default' : 'outline'}
-                        onClick={() => setViewMode('cards')}
-                        size="sm"
-                    >
-                        <Grid className="h-4 w-4 mr-2" />
-                        Karty
-                    </Button>
-                    <Button
-                        variant={viewMode === 'list' ? 'default' : 'outline'}
-                        onClick={() => setViewMode('list')}
-                        size="sm"
-                    >
-                        <List className="h-4 w-4 mr-2" />
-                        Lista
-                    </Button>
+        <div className="container mx-auto p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                    <h1 className="text-2xl sm:text-3xl font-bold">Uczniowie</h1>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <Link href="/users/new" className="w-full sm:w-auto">
+                            <Button className="w-full sm:w-auto">
+                                <UserPlus className="h-4 w-4 mr-2" />
+                                <span className="sm:hidden">Dodaj</span>
+                                <span className="hidden sm:inline">Dodaj ucznia</span>
+                            </Button>
+                        </Link>
+                        <div className="flex gap-2">
+                            <Button
+                                variant={viewMode === 'cards' ? 'default' : 'outline'}
+                                onClick={() => setViewMode('cards')}
+                                size="sm"
+                                className="flex-1 sm:flex-none"
+                            >
+                                <Grid className="h-4 w-4 mr-2" />
+                                <span className="sm:hidden">Karty</span>
+                                <span className="hidden sm:inline">Karty</span>
+                            </Button>
+                            <Button
+                                variant={viewMode === 'list' ? 'default' : 'outline'}
+                                onClick={() => setViewMode('list')}
+                                size="sm"
+                                className="flex-1 sm:flex-none"
+                            >
+                                <List className="h-4 w-4 mr-2" />
+                                <span className="sm:hidden">Lista</span>
+                                <span className="hidden sm:inline">Lista</span>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {viewMode === 'cards' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                     {users.map((user) => (
-                        <Card key={user.id}>
-                            <CardHeader>
-                                <CardTitle className="text-lg">
+                        <Card key={user.id} className="transition-shadow hover:shadow-md">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-base sm:text-lg">
                                     {user.firstName} {user.lastName}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="pt-0">
                                 <div className="flex flex-col gap-2">
                                     {user.function && (
-                                        <Badge variant="secondary">{user.function}</Badge>
+                                        <Badge variant="secondary" className="text-xs">
+                                            {user.function}
+                                        </Badge>
                                     )}
-                                    <Badge variant="outline">{user.group}</Badge>
+                                    <Badge variant="outline" className="text-xs">
+                                        {user.group}
+                                    </Badge>
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
             ) : (
-                <div className="overflow-x-auto">
-                    <Table>
+                <div className="overflow-x-auto -mx-3 sm:mx-0">
+                    <div className="min-w-full inline-block align-middle">
+                        <Table className="min-w-full">
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Nr</TableHead>
