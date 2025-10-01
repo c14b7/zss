@@ -147,17 +147,17 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           {/* Header */}
           <div className="px-4 lg:px-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-sm sm:text-base text-muted-foreground break-words">
                   Witaj z powrotem, {user.name || user.email}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="px-3 py-1">
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  {new Date().toLocaleDateString('pl-PL')}
+                <Badge variant="outline" className="px-2 sm:px-3 py-1">
+                  <CalendarDays className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">{new Date().toLocaleDateString('pl-PL')}</span>
                 </Badge>
               </div>
             </div>

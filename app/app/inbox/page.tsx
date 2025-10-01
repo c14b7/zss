@@ -267,11 +267,11 @@ export default function InboxPage() {
         <div className="px-4 lg:px-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                <Megaphone className="h-8 w-8 text-blue-500" />
-                System Ogłoszeń
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+                <Megaphone className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 flex-shrink-0" />
+                <span className="break-words">System Ogłoszeń</span>
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Zarządzaj ogłoszeniami
               </p>
             </div>

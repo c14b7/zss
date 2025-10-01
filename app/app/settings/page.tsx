@@ -15,7 +15,6 @@ import {
   Download,
   Mail,
   MessageSquare,
-  Shield,
   Globe,
   Send,
   TestTube
@@ -35,10 +34,6 @@ interface SettingsData {
     language: string;
     autoInstallPrompt: boolean;
   };
-  admin: {
-    systemName: string;
-    organizationName: string;
-  };
 }
 
 export default function SettingsPage() {
@@ -54,10 +49,6 @@ export default function SettingsPage() {
     app: {
       language: 'pl',
       autoInstallPrompt: true,
-    },
-    admin: {
-      systemName: 'ZSS - System zarządzania',
-      organizationName: 'Zespół Szkolno-Sportowy',
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -186,10 +177,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Settings className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Ustawienia systemu</h1>
+    <div className="container mx-auto p-4 sm:p-6 max-w-4xl">
+      <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <Settings className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
+        <h1 className="text-2xl sm:text-3xl font-bold break-words">Ustawienia systemu</h1>
       </div>
 
       <div className="grid gap-6">
@@ -285,8 +276,8 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="pt-4 space-y-2">
-              <Button variant="outline" onClick={handleTestNotification} className="mr-2">
+            <div className="pt-4 flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={handleTestNotification} className="w-full sm:w-auto">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Testuj powiadomienia push
               </Button>
@@ -294,6 +285,7 @@ export default function SettingsPage() {
                 variant="outline" 
                 onClick={handleTestEmailNotification}
                 disabled={emailTestLoading}
+                className="w-full sm:w-auto"
               >
                 <Mail className="h-4 w-4 mr-2" />
                 {emailTestLoading ? 'Wysyłanie...' : 'Testuj email powiadomienia'}
@@ -378,39 +370,6 @@ export default function SettingsPage() {
                   Systemowy
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ustawienia systemu */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Ustawienia systemu
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="systemName">Nazwa systemu</Label>
-              <Input
-                id="systemName"
-                value={settings.admin.systemName}
-                onChange={(e) =>
-                  handleSettingChange('admin', 'systemName', e.target.value)
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="organizationName">Nazwa organizacji</Label>
-              <Input
-                id="organizationName"
-                value={settings.admin.organizationName}
-                onChange={(e) =>
-                  handleSettingChange('admin', 'organizationName', e.target.value)
-                }
-              />
             </div>
           </CardContent>
         </Card>
