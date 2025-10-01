@@ -59,12 +59,13 @@ export class NotificationService {
         subject,
         content,
         targets,
-        [], // cc
+        [], // cc  
         [], // bcc
         [], // attachments
         false, // draft
         true, // html
-        new Date(Date.now() + 5000).toISOString() // scheduledAt - wyślij za 5 sekund
+        new Date(Date.now() + 5000).toISOString(), // scheduledAt - wyślij za 5 sekund
+        this.MAILGUN_PROVIDER_ID // Provider ID
       );
 
       console.log('✅ Powiadomienie wysłane pomyślnie:', message.$id);
@@ -93,7 +94,14 @@ export class NotificationService {
         ID.unique(),
         subject,
         content,
-        targets
+        targets,
+        [], // cc
+        [], // bcc
+        [], // attachments
+        false, // draft
+        true, // html
+        undefined, // scheduledAt - wyślij od razu
+        this.MAILGUN_PROVIDER_ID // Provider ID
       );
 
       console.log('✅ Przypomnienie wysłane pomyślnie:', message.$id);
@@ -121,7 +129,14 @@ export class NotificationService {
         ID.unique(),
         subject,
         content,
-        targets
+        targets,
+        [], // cc
+        [], // bcc
+        [], // attachments
+        false, // draft
+        true, // html
+        undefined, // scheduledAt - wyślij od razu
+        this.MAILGUN_PROVIDER_ID // Provider ID
       );
 
       console.log('✅ Wyniki głosowania wysłane pomyślnie:', message.$id);
