@@ -276,14 +276,6 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
-    white-space: normal !important;
-    word-wrap: break-word;
-    text-align: center;
-    min-height: auto;
-    height: auto;
-    padding: 0.75rem 1rem;
-  }
-}
 
 /* Styles for readonly editor */
 .editor-content-readonly .ContentEditable__root {

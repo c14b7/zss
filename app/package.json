@@ -82,5 +82,20 @@
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-context": "^1.1.2",
+    "@radix-ui/react-direction": "^1.1.1",
+    "@radix-ui/react-id": "^1.1.1",
+    "@radix-ui/react-presence": "^1.1.5",
+    "@radix-ui/react-primitive": "^2.1.3",
+    "@radix-ui/react-roving-focus": "^1.1.11",
+    "@radix-ui/react-use-controllable-state": "^1.2.2",
+    "@radix-ui/react-use-layout-effect": "^1.1.1",
+    "@radix-ui/react-compose-refs": "^1.1.2",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-collection": "^1.1.7",
+    "@radix-ui/react-use-callback-ref": "^1.1.1"
   }
 }
