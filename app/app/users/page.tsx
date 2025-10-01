@@ -166,12 +166,12 @@ export default function UsersPage() {
     return (
         <div className="container mx-auto p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Uczestnicy</h1>
+                <h1 className="text-3xl font-bold">Uczniowie</h1>
                 <div className="flex gap-2">
                     <Link href="/users/new">
                         <Button>
                             <UserPlus className="h-4 w-4 mr-2" />
-                            Dodaj członka
+                            Dodaj ucznia
                         </Button>
                     </Link>
                     <Button

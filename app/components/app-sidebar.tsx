@@ -104,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: FileText,
       },
       {
-        name: "Użytkownicy",
+        name: "Uczniowie",
         url: "/users",
         icon: Users,
       },

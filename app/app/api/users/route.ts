@@ -51,21 +51,39 @@ export async function GET() {
     const fallbackUsers = [
       {
         id: '1',
-        firstName: 'Jan',
+        firstName: 'Adam',
         lastName: 'Kowalski',
-        function: 'Kierownik',
-        group: 'Grupa A',
-        email: 'jan.kowalski@example.com',
+        function: 'Przewodniczący',
+        group: 'Grupa 1',
+        email: 'adam.kowalski@szkola.edu.pl',
         phone: '+48 123 456 789'
       },
       {
         id: '2',
         firstName: 'Anna',
         lastName: 'Nowak',
-        function: 'Instruktor',
-        group: 'Grupa B',
-        email: 'anna.nowak@example.com',
+        function: 'Zastępca',
+        group: 'Grupa 1',
+        email: 'anna.nowak@szkola.edu.pl',
         phone: '+48 987 654 321'
+      },
+      {
+        id: '3',
+        firstName: 'Michał',
+        lastName: 'Wiśniewski',
+        function: 'Uczeń',
+        group: 'Grupa 2',
+        email: 'michal.wisniewski@szkola.edu.pl',
+        phone: '+48 555 111 222'
+      },
+      {
+        id: '4',
+        firstName: 'Katarzyna',
+        lastName: 'Zielińska',
+        function: 'Uczeń',
+        group: 'Grupa 2',
+        email: 'katarzyna.zielinska@szkola.edu.pl',
+        phone: '+48 666 333 444'
       }
     ];
     

@@ -22,19 +22,16 @@ interface NewUser {
 }
 
 const availableGroups = [
-    'Grupa A',
-    'Grupa B', 
-    'Grupa C',
-    'Kadra',
-    'Wolontariusze'
+    'Grupa 1',
+    'Grupa 2'
 ];
 
 const availableFunctions = [
-    'Kierownik',
+    'Przewodniczący',
     'Zastępca',
-    'Instruktor',
-    'Uczestnik',
-    'Gość'
+    'Skarbnik',
+    'Sekretarz',
+    'Uczeń'
 ];
 
 export default function NewUserPage() {
@@ -105,11 +102,11 @@ export default function NewUserPage() {
                 throw new Error('Błąd podczas tworzenia użytkownika');
             }
 
-            toast.success('Nowy członek został dodany pomyślnie');
+            toast.success('Nowy uczeń został dodany pomyślnie');
             router.push('/users');
         } catch (error) {
             console.error('Error creating user:', error);
-            toast.error('Nie udało się dodać nowego członka');
+            toast.error('Nie udało się dodać nowego ucznia');
         } finally {
             setIsLoading(false);
         }
@@ -130,7 +127,7 @@ export default function NewUserPage() {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Powrót
                 </Button>
-                <h1 className="text-3xl font-bold">Dodaj nowego członka</h1>
+                <h1 className="text-3xl font-bold">Dodaj nowego ucznia</h1>
             </div>
 
             <Card>
@@ -248,7 +245,7 @@ export default function NewUserPage() {
                                 id="notes"
                                 value={user.notes || ''}
                                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                                placeholder="Dodatkowe informacje o członku..."
+                                placeholder="                            Dodatkowe informacje o uczniu..."
                                 rows={3}
                             />
                         </div>
@@ -264,7 +261,7 @@ export default function NewUserPage() {
                                 ) : (
                                     <>
                                         <Save className="h-4 w-4 mr-2" />
-                                        Dodaj członka
+                                        Dodaj ucznia
                                     </>
                                 )}
                             </Button>
