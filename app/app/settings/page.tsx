@@ -15,7 +15,6 @@ import {
   Download,
   Mail,
   MessageSquare,
-  Shield,
   Globe,
   Send,
   TestTube
@@ -35,10 +34,6 @@ interface SettingsData {
     language: string;
     autoInstallPrompt: boolean;
   };
-  admin: {
-    systemName: string;
-    organizationName: string;
-  };
 }
 
 export default function SettingsPage() {
@@ -54,10 +49,6 @@ export default function SettingsPage() {
     app: {
       language: 'pl',
       autoInstallPrompt: true,
-    },
-    admin: {
-      systemName: 'ZSS - System zarządzania',
-      organizationName: 'Zespół Szkolno-Sportowy',
     },
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -378,39 +369,6 @@ export default function SettingsPage() {
                   Systemowy
                 </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Ustawienia systemu */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Ustawienia systemu
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="systemName">Nazwa systemu</Label>
-              <Input
-                id="systemName"
-                value={settings.admin.systemName}
-                onChange={(e) =>
-                  handleSettingChange('admin', 'systemName', e.target.value)
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="organizationName">Nazwa organizacji</Label>
-              <Input
-                id="organizationName"
-                value={settings.admin.organizationName}
-                onChange={(e) =>
-                  handleSettingChange('admin', 'organizationName', e.target.value)
-                }
-              />
             </div>
           </CardContent>
         </Card>
